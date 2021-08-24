@@ -12,15 +12,17 @@ service to your existing docker-compose.override.yaml.
 
 ```yaml
 services:
-  press-release-email-generator:
+  press-releases-collaboration-service:
     image: semtech/mu-javascript-template
     ports:
       - <available-port-on-device>:80
     environment:
       NODE_ENV: "development"
     volumes:
-      - ../press-release-email-generator-service/:/app/
+      - ../press-release-collaboration-service/:/app/
 ```
+
+and add the following route to the 
 
 
 # Endpoints
