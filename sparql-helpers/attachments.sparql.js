@@ -67,29 +67,30 @@ async function getAttachmentDownload(attachment) {
 }
 
 export async function getInsertAttachmentQuery(attachment, graph) {
-
+    const attachmentProperties = attachment.properties
+    .map((property) => {
+        return sparqlEscapeUri(property.predicate)
+            + ' ' +
+            sparqlEscapeString(property.object);
+    })
+    .join(';\n');
+    const downloadProperties = attachment.download.properties
+    .map((property) => {
+        return sparqlEscapeUri(property.predicate)
+            + ' ' +
+            sparqlEscapeString(property.object);
+    })
+    .join(';\n')
     return `
     ${PREFIXES}
     
     INSERT DATA {
         GRAPH ${sparqlEscapeUri(graph)} {
-            ${sparqlEscapeUri(attachment.attachmentURI)}   a                       nfo:FileDataObject;
-            ${attachment.properties.filter((property) => {
-        return property.predicate !== RDF_TYPE;
-    }).map((property) => {
-        return sparqlEscapeUri(property.predicate) + ' ' + sparqlEscapeString(property.object);
-    }).join(';\n')
-    } ;
-                                                           nie:dataSource ${sparqlEscapeUri(attachment.download.dataSourceURI)} .
+            ${sparqlEscapeUri(attachment.attachmentURI)}            ${attachmentProperties} ;
+                                                                    nie:dataSource ${sparqlEscapeUri(attachment.download.dataSourceURI)} .
              
-             ${sparqlEscapeUri(attachment.download.dataSourceURI)} ${attachment.download.properties
-                                                                                        .map((property) => {
-                                                                                            return  sparqlEscapeUri(property.predicate) 
-                                                                                                    + ' ' + 
-                                                                                                    sparqlEscapeString(property.object);
-                                                                                        })
-                                                                                        .join(';\n') } ;
-                nie:dataSource  ${sparqlEscapeUri(attachment.attachmentURI)}.
+             ${sparqlEscapeUri(attachment.download.dataSourceURI)}  ${downloadProperties} ;
+                                                                    nie:dataSource  ${sparqlEscapeUri(attachment.attachmentURI)}.
         }
     }
     `;

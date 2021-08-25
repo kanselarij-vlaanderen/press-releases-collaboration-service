@@ -2,6 +2,7 @@ import { sparqlEscapeUri, query } from 'mu';
 import { PREFIXES } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
 import { getPressReleaseAttachments, getPressReleaseAttachmentsQueries } from './attachments.sparql';
+import { getPressReleaseSourcesQueries } from './sources.sparql';
 
 export async function getPressRelease(pressReleaseURI) {
     const queryResult = await query(`
@@ -28,12 +29,10 @@ export async function getPressRelease(pressReleaseURI) {
 
 export async function copyPressReleaseRelations(pressReleaseURI, tempGraphURI) {
     const attachmentQueries = await getPressReleaseAttachmentsQueries(pressReleaseURI, tempGraphURI);
+    const sourcesQueries = await getPressReleaseSourcesQueries(pressReleaseURI, tempGraphURI);
+    //  bronnen, telefoon/mobile/email
 
-    console.log('QUERY:::::: ', attachmentQueries[0]);
+    console.log('ATTACHMENT QUERY:::::: ', attachmentQueries[0]);
+    console.log('SOURCE QUERY:::::: ', sourcesQueries[0]);
     // TODO: Execute queries
 }
-
-
-//  bronnen, telefoon/mobile/email
-
-

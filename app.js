@@ -17,25 +17,24 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         // retrieve the press-release related to the collaborationActivity
         const pressRelease = await getPressRelease(collaborationActivity.pressReleaseURI);
 
-        console.log('PRESS_RELEASE:::::: \n', pressRelease);
-
         // Check if user has the right to share the press release,
         // by checking if the press-release creator.id is the same as the organizationId in the request headers.
         // if this is not the case, send a 403 (Forbidden) response
         const requestedByOrganizationId = await getOrganizationIdFromHeaders(req.headers);
-        console.log('REQUESTED_BY:::::: ', requestedByOrganizationId);
-        console.log('CREATOR_ID:::::::: ', pressRelease.creatorId);
         if ((pressRelease.creatorId !== requestedByOrganizationId) || !requestedByOrganizationId) {
             return res.sendStatus(403);
         }
 
         // get all the collaborators related to the collaborationActivity
         const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
-        console.log('COLLABORATORS:::::::: \n', collaborators);
 
+        // create temporary copy
         for (let collaborator of collaborators) {
             await copyPressReleaseRelations(collaborationActivity.pressReleaseURI, `http://mu.semte.ch/graphs/tmp-data-share/${collaborator.collaboratorId}`);
+            // await copyPressRelease()
         }
+
+
         res.sendStatus(202);
     } catch (err) {
         console.error(err);
