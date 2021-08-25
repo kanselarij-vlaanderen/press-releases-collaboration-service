@@ -1,6 +1,9 @@
 import { app, errorHandler } from 'mu';
 import { getCollaborationActivityById, getCollaborators } from './sparql-helpers/collaboration-activities.sparql';
-import { getPressRelease, getPressReleaseRelations } from './sparql-helpers/press-release.sparql';
+import {
+    copyPressReleaseRelations,
+    getPressRelease,
+} from './sparql-helpers/press-release.sparql';
 import { getOrganizationIdFromHeaders } from './helpers/generic-helpers';
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
@@ -30,9 +33,9 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
         console.log('COLLABORATORS:::::::: \n', collaborators);
 
-        const relations = await getPressReleaseRelations(collaborationActivity.pressReleaseURI);
-
-
+        for (let collaborator of collaborators) {
+            await copyPressReleaseRelations(collaborationActivity.pressReleaseURI, `http://mu.semte.ch/graphs/tmp-data-share/${collaborator.collaboratorId}`);
+        }
         res.sendStatus(202);
     } catch (err) {
         console.error(err);

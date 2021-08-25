@@ -2,7 +2,7 @@ import { sparqlEscapeUri, query, sparqlEscapeString } from 'mu';
 import { PREFIXES, RDF_TYPE } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
 
-export async function getPressReleaseAttachments(pressReleaseURI) {
+export async function getPressReleaseAttachmentsQueries(pressReleaseURI, tempGraphURI) {
     const attachments = (await query(`
     ${PREFIXES}
 
@@ -13,18 +13,18 @@ export async function getPressReleaseAttachments(pressReleaseURI) {
     }
     `)).results.bindings.map(mapBindingValue);
 
-    const attachmentQueries = [];
+    let insertQueries = [];
     for (let attachment of attachments) {
-        const q = await getInsertAttachmentQuery({
+        const result = await getInsertAttachmentQuery({
             pressReleaseURI,
             attachmentURI: attachment.attachmentURI,
             properties: await getAttachmentProperties(attachment),
             download: await getAttachmentDownload(attachment),
-        }, 'http://test.com');
-        console.log('\nQ::::::\n', q);
-        attachmentQueries.push(q);
+        }, tempGraphURI);
+
+        insertQueries.push(result);
     }
-    return attachmentQueries;
+    return insertQueries;
 }
 
 async function getAttachmentProperties(attachment) {
@@ -68,7 +68,7 @@ async function getAttachmentDownload(attachment) {
 
 export async function getInsertAttachmentQuery(attachment, graph) {
 
-    let q = `
+    return `
     ${PREFIXES}
     
     INSERT DATA {
@@ -82,20 +82,16 @@ export async function getInsertAttachmentQuery(attachment, graph) {
     } ;
                                                            nie:dataSource ${sparqlEscapeUri(attachment.download.dataSourceURI)} .
              
-             ${sparqlEscapeUri(attachment.download.dataSourceURI)} a                nfo:FileDataObject;
-             ${attachment.download.properties.filter((property) => {
-        return property.predicate !== RDF_TYPE;
-    }).map((property) => {
-        return sparqlEscapeUri(property.predicate) + ' ' + sparqlEscapeString(property.object);
-    }).join(';\n')
-    } ;
+             ${sparqlEscapeUri(attachment.download.dataSourceURI)} ${attachment.download.properties
+                                                                                        .map((property) => {
+                                                                                            return  sparqlEscapeUri(property.predicate) 
+                                                                                                    + ' ' + 
+                                                                                                    sparqlEscapeString(property.object);
+                                                                                        })
+                                                                                        .join(';\n') } ;
                 nie:dataSource  ${sparqlEscapeUri(attachment.attachmentURI)}.
         }
     }
     `;
-
-    console.log('QUERY::::::: ', q);
-    return q;
-
 
 }
