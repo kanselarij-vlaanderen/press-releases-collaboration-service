@@ -1,4 +1,4 @@
-import { app, errorHandler } from 'mu';
+import { app, errorHandler, uuid as generateUuid } from 'mu';
 import { getCollaborationActivityById, getCollaborators } from './sparql-helpers/collaboration-activities.sparql';
 import {
     copyPressReleaseRelations,
@@ -29,9 +29,11 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
 
         // create temporary copy
+        await copyPressReleaseRelations(collaborationActivity.pressReleaseURI, `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`);
+        // await copyPressRelease();
+
         for (let collaborator of collaborators) {
-            await copyPressReleaseRelations(collaborationActivity.pressReleaseURI, `http://mu.semte.ch/graphs/tmp-data-share/${collaborator.collaboratorId}`);
-            // await copyPressRelease()
+            // TODO: copy temporary to collaborator graph
         }
 
 
