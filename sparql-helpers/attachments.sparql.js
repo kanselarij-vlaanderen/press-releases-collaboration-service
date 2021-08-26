@@ -1,6 +1,6 @@
 import { sparqlEscapeUri, query, sparqlEscapeString } from 'mu';
 import { PREFIXES, RDF_TYPE } from './constants.sparql';
-import { mapBindingValue } from '../helpers/generic-helpers';
+import { mapBindingValue, mapProperty } from '../helpers/generic-helpers';
 
 export async function getPressReleaseAttachmentsQueries(pressReleaseURI, tempGraphURI) {
     const attachments = (await query(`
@@ -68,18 +68,12 @@ async function getAttachmentDownload(attachment) {
 
 export async function getInsertAttachmentQuery(attachment, graph) {
     const attachmentProperties = attachment.properties
-    .map((property) => {
-        return sparqlEscapeUri(property.predicate)
-            + ' ' +
-            sparqlEscapeString(property.object);
-    })
+    .map(mapProperty)
+    .filter(item => item.length )
     .join(';\n');
     const downloadProperties = attachment.download.properties
-    .map((property) => {
-        return sparqlEscapeUri(property.predicate)
-            + ' ' +
-            sparqlEscapeString(property.object);
-    })
+    .map(mapProperty)
+    .filter(item => item.length )
     .join(';\n')
     return `
     ${PREFIXES}

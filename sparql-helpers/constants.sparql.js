@@ -17,3 +17,12 @@ export const PREFIXES = `
 `;
 
 export const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
+
+export const RELATION_PREDICATES = [
+    '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>', //also add rdf type predicate since it needs to be fiiltered out as well
+    '<http://www.w3.org/ns/adms#status>',
+    '<http://mu.semte.ch/vocabularies/ext/hasMobile>',
+    '<http://www.w3.org/2006/vcard/ns#hasTelephone>',
+    '<http://www.w3.org/2006/vcard/ns#hasEmail>',
+    '<http://www.semanticdesktop.org/ontologies/2007/01/19/nie#dataSource>',
+];

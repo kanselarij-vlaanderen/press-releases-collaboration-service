@@ -1,7 +1,8 @@
 import { sparqlEscapeUri, query } from 'mu';
+import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
-import { getPressReleaseAttachments, getPressReleaseAttachmentsQueries } from './attachments.sparql';
+import { getPressReleaseAttachmentsQueries } from './attachments.sparql';
 import { getPressReleaseSourcesQueries } from './sources.sparql';
 
 export async function getPressRelease(pressReleaseURI) {
@@ -30,9 +31,14 @@ export async function getPressRelease(pressReleaseURI) {
 export async function copyPressReleaseRelations(pressReleaseURI, tempGraphURI) {
     const attachmentQueries = await getPressReleaseAttachmentsQueries(pressReleaseURI, tempGraphURI);
     const sourcesQueries = await getPressReleaseSourcesQueries(pressReleaseURI, tempGraphURI);
-    //  bronnen, telefoon/mobile/email
 
-    console.log('ATTACHMENT QUERY:::::: ', attachmentQueries[0]);
-    console.log('SOURCE QUERY:::::: ', sourcesQueries[0]);
+    for(let attachmentQuery of attachmentQueries){
+        await update(attachmentQuery);
+    }
+
+    for (let sourcesQuery of sourcesQueries){
+        await update(sourcesQuery);
+    }
+    // telefoon/mobile/email
     // TODO: Execute queries
 }

@@ -1,5 +1,5 @@
-import { query, sparqlEscapeUri } from 'mu';
-import { PREFIXES, SESSION_GRAPH } from '../sparql-helpers/constants.sparql';
+import { query, sparqlEscapeUri, sparqlEscapeString } from 'mu';
+import { PREFIXES, RELATION_PREDICATES, SESSION_GRAPH } from '../sparql-helpers/constants.sparql';
 
 export function handleGenericError(e, next) {
     console.error(e);
@@ -26,4 +26,12 @@ export async function getOrganizationIdFromHeaders(headers) {
     `);
 
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0].organisationId : null;
+}
+
+export function mapProperty(property) {
+    if (RELATION_PREDICATES.indexOf(sparqlEscapeUri(property.predicate)) === -1) {
+        return '';
+    } else {
+        return `${sparqlEscapeUri(property.predicate)} ${sparqlEscapeString(property.object)}`;
+    }
 }

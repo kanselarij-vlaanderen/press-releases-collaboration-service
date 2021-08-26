@@ -1,6 +1,6 @@
 import { PREFIXES } from './constants.sparql';
-import { mapBindingValue } from '../helpers/generic-helpers';
-import { sparqlEscapeUri, query, sparqlEscapeString } from 'mu';
+import { mapBindingValue, mapProperty } from '../helpers/generic-helpers';
+import { sparqlEscapeUri, query } from 'mu';
 
 export async function getPressReleaseSourcesQueries(pressReleaseURI, tempGraphURI) {
     const sources = (await query(`
@@ -39,13 +39,10 @@ async function getSourceProperties(source) {
 }
 
 export async function getInsertSourceQuery(source, graph) {
-
     const sourceProperties = source.properties
-    .map((property) => {
-        return sparqlEscapeUri(property.predicate)
-            + ' ' +
-            sparqlEscapeString(property.object);
-    }).join(';\n');
+    .map(mapProperty)
+    .filter(item => item.length )
+    .join(';\n');
 
     // TODO: mobile, telephone, mail
     return `
