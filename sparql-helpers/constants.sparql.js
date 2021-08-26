@@ -1,4 +1,4 @@
-import { sparqlEscapeUri } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, sparqlEscapeNumber } from 'mu';
 
 export const PREFIXES = `
     PREFIX mu: ${sparqlEscapeUri('http://mu.semte.ch/vocabularies/core/')}
@@ -16,13 +16,16 @@ export const PREFIXES = `
     PREFIX dbpedia: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
 `;
 
-export const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
+export const ATTACHMENT_PREDICATES = {
+    'http://purl.org/dc/terms/created': sparqlEscapeDateTime,
+    'http://purl.org/dc/terms/modified': sparqlEscapeDateTime,
+    'http://purl.org/dc/terms/format': sparqlEscapeString,
+    'http://mu.semte.ch/vocabularies/core/uuid': sparqlEscapeString,
+    'http://dbpedia.org/ontology/fileExtension': sparqlEscapeString,
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName': sparqlEscapeString,
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize': sparqlEscapeNumber,
+};
 
-export const RELATION_PREDICATES = [
-    '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>', //also add rdf type predicate since it needs to be fiiltered out as well
-    '<http://www.w3.org/ns/adms#status>',
-    '<http://mu.semte.ch/vocabularies/ext/hasMobile>',
-    '<http://www.w3.org/2006/vcard/ns#hasTelephone>',
-    '<http://www.w3.org/2006/vcard/ns#hasEmail>',
-    '<http://www.semanticdesktop.org/ontologies/2007/01/19/nie#dataSource>',
-];
+export const DOWNLOAD_PREDICATES = {
+    'http://mu.semte.ch/vocabularies/core/uuid': sparqlEscapeString,
+};

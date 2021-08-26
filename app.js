@@ -25,17 +25,16 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
             return res.sendStatus(403);
         }
 
-        // get all the collaborators related to the collaborationActivity
-        const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
-
         // create temporary copy
         await copyPressReleaseRelations(collaborationActivity.pressReleaseURI, `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`);
         // await copyPressRelease();
 
+        // get all the collaborators related to the collaborationActivity
+        const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
+
         for (let collaborator of collaborators) {
             // TODO: copy temporary to collaborator graph
         }
-
 
         res.sendStatus(202);
     } catch (err) {
