@@ -16,17 +16,6 @@ export const PREFIXES = `
     PREFIX dbpedia: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
 `;
 
-
-export const SOURCE_PREDICATES = [
-    'http://mu.semte.ch/vocabularies/core/uuid',
-    'http://purl.org/dc/terms/created',
-    'http://purl.org/dc/terms/modified',
-    'http://www.w3.org/2006/vcard/ns#fn',
-    'http://www.w3.org/2006/vcard/ns#family-name',
-    'http://www.w3.org/2006/vcard/ns#given-name',
-    'http://www.w3.org/2006/vcard/ns#role',
-];
-
 export const SOURCE_RELATIONS = [
     'http://www.w3.org/2006/vcard/ns#hasEmail',
     'http://mu.semte.ch/vocabularies/ext/hasMobile',
@@ -37,7 +26,7 @@ export const SOURCE_RELATIONS = [
 
 export const LINKED_RESOURCES = [
     {
-        'name': 'attachments', // just here to describe resource for easy reading while debugging
+        // Attachments
         'parentPredicate': 'fabio:PressRelease',
         'relationPredicate': 'nie:hasPart',
         'resourcePredicate': 'nfo:FileDataObject',
@@ -53,7 +42,7 @@ export const LINKED_RESOURCES = [
         ],
         'relations': [
             {
-                'name': 'downloads',
+                // Downloads
                 'parentPredicate': 'nfo:FileDataObject',
                 'relationPredicate': 'nie:dataSource',
                 'inverse': true,
@@ -67,6 +56,52 @@ export const LINKED_RESOURCES = [
                     'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
                     'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
                     'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
+                ],
+                'relations': [],
+            },
+        ],
+    }, {
+        // Sources
+        'parentPredicate': 'fabio:PressRelease',
+        'relationPredicate': 'dct:source',
+        'resourcePredicate': 'ebucore:Contact',
+        'predicates': [
+            'http://mu.semte.ch/vocabularies/core/uuid',
+            'http://purl.org/dc/terms/created',
+            'http://purl.org/dc/terms/modified',
+            'http://www.w3.org/2006/vcard/ns#fn',
+            'http://www.w3.org/2006/vcard/ns#family-name',
+            'http://www.w3.org/2006/vcard/ns#given-name',
+            'http://www.w3.org/2006/vcard/ns#role',
+        ],
+        'relations': [
+            {
+                // Email
+                'parentPredicate': 'ebucore:Contact',
+                'relationPredicate': 'vcard:hasEmail',
+                'resourcePredicate': 'vcard:Email',
+                'predicates': [
+                    'http://www.w3.org/2006/vcard/ns#hasValue'
+                ],
+                'relations': [],
+            },
+            {
+                // Telephone
+                'parentPredicate': 'ebucore:Contact',
+                'relationPredicate': 'vcard:hasTelephone',
+                'resourcePredicate': 'vcard:Voice',
+                'predicates': [
+                    'http://www.w3.org/2006/vcard/ns#hasValue'
+                ],
+                'relations': [],
+            },
+            {
+                // Mobile
+                'parentPredicate': 'ebucore:Contact',
+                'relationPredicate': 'ext:hasMobile',
+                'resourcePredicate': 'vcard:Cell',
+                'predicates': [
+                    'http://www.w3.org/2006/vcard/ns#hasValue'
                 ],
                 'relations': [],
             },
