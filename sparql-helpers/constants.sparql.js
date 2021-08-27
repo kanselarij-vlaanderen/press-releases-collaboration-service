@@ -37,7 +37,7 @@ export const SOURCE_RELATIONS = [
 
 export const LINKED_RESOURCES = [
     {
-        'name': 'attachments',
+        'name': 'attachments', // just here to describe resource for easy reading while debugging
         'parentPredicate': 'fabio:PressRelease',
         'relationPredicate': 'nie:hasPart',
         'resourcePredicate': 'nfo:FileDataObject',
