@@ -16,29 +16,8 @@ export const PREFIXES = `
     PREFIX dbpedia: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
 `;
 
-export const ATTACHMENT_PREDICATES = [
-    'http://purl.org/dc/terms/created',
-    'http://purl.org/dc/terms/modified',
-    'http://purl.org/dc/terms/format',
-    'http://mu.semte.ch/vocabularies/core/uuid',
-    'http://dbpedia.org/ontology/fileExtension',
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
-];
 
-export const DOWNLOAD_PREDICATES = [
-    'http://purl.org/dc/terms/created',
-    'http://purl.org/dc/terms/modified',
-    'http://purl.org/dc/terms/format',
-    'http://mu.semte.ch/vocabularies/core/uuid',
-    'http://dbpedia.org/ontology/fileExtension',
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
-];
-
-export const SOURCES_PREDICATES = [
+export const SOURCE_PREDICATES = [
     'http://mu.semte.ch/vocabularies/core/uuid',
     'http://purl.org/dc/terms/created',
     'http://purl.org/dc/terms/modified',
@@ -46,9 +25,52 @@ export const SOURCES_PREDICATES = [
     'http://www.w3.org/2006/vcard/ns#family-name',
     'http://www.w3.org/2006/vcard/ns#given-name',
     'http://www.w3.org/2006/vcard/ns#role',
-    // http://www.w3.org/ns/adms#status
-    // http://mu.semte.ch/vocabularies/ext/hasMobile
-    // http://www.w3.org/2006/vcard/ns#hasTelephone
-    // http://www.w3.org/2006/vcard/ns#hasEmail
+];
+
+export const SOURCE_RELATIONS = [
+    'http://www.w3.org/2006/vcard/ns#hasEmail',
+    'http://mu.semte.ch/vocabularies/ext/hasMobile',
+    'http://www.w3.org/2006/vcard/ns#hasTelephone',
+    'http://www.w3.org/ns/adms#status',
+];
+
+
+export const LINKED_RESOURCES = [
+    {
+        'name': 'attachments',
+        'parentPredicate': 'fabio:PressRelease',
+        'relationPredicate': 'nie:hasPart',
+        'resourcePredicate': 'nfo:FileDataObject',
+        'predicates': [
+            'http://purl.org/dc/terms/created',
+            'http://purl.org/dc/terms/modified',
+            'http://purl.org/dc/terms/format',
+            'http://mu.semte.ch/vocabularies/core/uuid',
+            'http://dbpedia.org/ontology/fileExtension',
+            'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
+            'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
+            'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
+        ],
+        'relations': [
+            {
+                'name': 'downloads',
+                'parentPredicate': 'nfo:FileDataObject',
+                'relationPredicate': 'nie:dataSource',
+                'inverse': true,
+                'resourcePredicate': 'nfo:FileDataObject',
+                'predicates': [
+                    'http://purl.org/dc/terms/created',
+                    'http://purl.org/dc/terms/modified',
+                    'http://purl.org/dc/terms/format',
+                    'http://mu.semte.ch/vocabularies/core/uuid',
+                    'http://dbpedia.org/ontology/fileExtension',
+                    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
+                    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
+                    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
+                ],
+                'relations': [],
+            },
+        ],
+    },
 ];
 

@@ -2,8 +2,7 @@ import { sparqlEscapeUri, query } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
-import { getPressReleaseAttachmentInsertQueries, getPressReleaseAttachmentsQueries } from './attachments.sparql';
-import { getPressReleaseSourcesQueries } from './sources.sparql';
+import { getPressReleaseRelationsInsertQuery } from './attachments.sparql';
 
 export async function getPressRelease(pressReleaseURI) {
 
@@ -43,12 +42,17 @@ export async function getPressRelease(pressReleaseURI) {
 }
 
 export async function copyPressReleaseRelationsToTemporaryGraph(pressReleaseURI, tempGraphURI) {
-    const attachmentInsertQueries = await getPressReleaseAttachmentInsertQueries(pressReleaseURI, tempGraphURI);
-    // const sourcesQueries = await getPressReleaseSourcesQueries(pressReleaseURI, tempGraphURI);
+    const relationsInsertQuery = await getPressReleaseRelationsInsertQuery(pressReleaseURI, tempGraphURI);
+    console.log(relationsInsertQuery);
 
-    for (let attachmentInsertQuery of attachmentInsertQueries) {
-        await updateSudo(attachmentInsertQuery);
-    }
+    // for (let attachmentInsertQuery of attachmentInsertQueries) {
+    //     await updateSudo(attachmentInsertQuery);
+    // }
+    // for (let sourcesInsertQuery of sourcesInsertQueries) {
+    //     await updateSudo(sourcesInsertQuery);
+    // }
 
     // telefoon/mobile/email
 }
+
+
