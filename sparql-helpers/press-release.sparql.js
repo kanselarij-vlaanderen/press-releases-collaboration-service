@@ -2,7 +2,7 @@ import { sparqlEscapeUri, query } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
-import { getPressReleaseRelationsInsertQuery } from './attachments.sparql';
+import { getPressReleaseRelationsInsertQuery } from './press-release-relations.sparql';
 
 export async function getPressRelease(pressReleaseURI) {
 
