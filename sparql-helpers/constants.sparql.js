@@ -1,4 +1,4 @@
-import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString } from 'mu';
+import { sparqlEscapeUri } from 'mu';
 
 export const PREFIXES = `
     PREFIX mu: ${sparqlEscapeUri('http://mu.semte.ch/vocabularies/core/')}
@@ -14,15 +14,9 @@ export const PREFIXES = `
     PREFIX nfo: ${sparqlEscapeUri('http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#')}
     PREFIX dct: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
     PREFIX dbpedia: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
+    PREFIX skos: ${sparqlEscapeUri('http://www.w3.org/2004/02/skos/core#')}
+    PREFIX adms: ${sparqlEscapeUri('http://www.w3.org/ns/adms#')}
 `;
-
-export const SOURCE_RELATIONS = [
-    'http://www.w3.org/2006/vcard/ns#hasEmail',
-    'http://mu.semte.ch/vocabularies/ext/hasMobile',
-    'http://www.w3.org/2006/vcard/ns#hasTelephone',
-    'http://www.w3.org/ns/adms#status',
-];
-
 
 export const LINKED_RESOURCES = [
     {
@@ -76,12 +70,22 @@ export const LINKED_RESOURCES = [
         ],
         'relations': [
             {
+                // Status
+                'parentPredicate': 'ebucore:Contact',
+                'relationPredicate': 'adms:status',
+                'resourcePredicate': 'ext:ContactStatus',
+                'predicates': [
+                    'http://www.w3.org/2004/02/skos/core#prefLabel',
+                ],
+                'relations': [],
+            },
+            {
                 // Email
                 'parentPredicate': 'ebucore:Contact',
                 'relationPredicate': 'vcard:hasEmail',
                 'resourcePredicate': 'vcard:Email',
                 'predicates': [
-                    'http://www.w3.org/2006/vcard/ns#hasValue'
+                    'http://www.w3.org/2006/vcard/ns#hasValue',
                 ],
                 'relations': [],
             },
@@ -91,7 +95,7 @@ export const LINKED_RESOURCES = [
                 'relationPredicate': 'vcard:hasTelephone',
                 'resourcePredicate': 'vcard:Voice',
                 'predicates': [
-                    'http://www.w3.org/2006/vcard/ns#hasValue'
+                    'http://www.w3.org/2006/vcard/ns#hasValue',
                 ],
                 'relations': [],
             },
@@ -101,7 +105,7 @@ export const LINKED_RESOURCES = [
                 'relationPredicate': 'ext:hasMobile',
                 'resourcePredicate': 'vcard:Cell',
                 'predicates': [
-                    'http://www.w3.org/2006/vcard/ns#hasValue'
+                    'http://www.w3.org/2006/vcard/ns#hasValue',
                 ],
                 'relations': [],
             },
