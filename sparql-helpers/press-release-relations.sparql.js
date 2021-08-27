@@ -32,7 +32,7 @@ async function getChildRelationStatements(parentURI, resourceConfig) {
             }
         }
 
-        if (resourceConfig.relations) {
+        if (resourceConfig.relations && linkedResourceItems.length) {
             for (const childRelation of resourceConfig.relations) {
                 const childRelationStatements = await getChildRelationStatements(linkedResourceItems[0].subject.value, childRelation);
                 statements.push(childRelationStatements);

@@ -1,5 +1,9 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
-import { getCollaborationActivityById, getCollaborators } from './sparql-helpers/collaboration-activities.sparql';
+import {
+    copyCollaborationActivityToTemporaryGraph,
+    getCollaborationActivityById,
+    getCollaborators,
+} from './sparql-helpers/collaboration-activities.sparql';
 import {
     copyPressReleaseRelationsToTemporaryGraph, getPressRelease,
 } from './sparql-helpers/press-release.sparql';
@@ -26,12 +30,13 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
             return res.sendStatus(403);
         }
 
-        // create temporary copy
-        await copyPressReleaseRelationsToTemporaryGraph(collaborationActivity.pressReleaseURI, TEMP_GRAPH);
-        // await copyPressRelease();
-
         // get all the collaborators related to the collaborationActivity
         const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
+
+        // create temporary copy
+        await copyCollaborationActivityToTemporaryGraph(collaborationActivity, collaborators, TEMP_GRAPH);
+        await copyPressReleaseRelationsToTemporaryGraph(collaborationActivity.pressReleaseURI, TEMP_GRAPH);
+        await copyPressReleaseAttributes(collaborationActivity.pressReleaseURI, TEMP_GRAPH);
 
         for (let collaborator of collaborators) {
             // TODO: copy temporary to collaborator graph

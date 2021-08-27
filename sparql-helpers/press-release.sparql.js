@@ -43,16 +43,11 @@ export async function getPressRelease(pressReleaseURI) {
 
 export async function copyPressReleaseRelationsToTemporaryGraph(pressReleaseURI, tempGraphURI) {
     const relationsInsertQuery = await getPressReleaseRelationsInsertQuery(pressReleaseURI, tempGraphURI);
-    console.log(relationsInsertQuery);
+    await updateSudo(relationsInsertQuery);
+}
 
-    // for (let attachmentInsertQuery of attachmentInsertQueries) {
-    //     await updateSudo(attachmentInsertQuery);
-    // }
-    // for (let sourcesInsertQuery of sourcesInsertQueries) {
-    //     await updateSudo(sourcesInsertQuery);
-    // }
-
-    // telefoon/mobile/email
+export async function copyPressReleaseAttributes(pressReleaseURI, tempGraphURI) {
+    return
 }
 
 
