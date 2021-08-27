@@ -1,4 +1,4 @@
-import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, sparqlEscapeNumber } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString } from 'mu';
 
 export const PREFIXES = `
     PREFIX mu: ${sparqlEscapeUri('http://mu.semte.ch/vocabularies/core/')}
@@ -16,16 +16,39 @@ export const PREFIXES = `
     PREFIX dbpedia: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
 `;
 
-export const ATTACHMENT_PREDICATES = {
-    'http://purl.org/dc/terms/created': sparqlEscapeDateTime,
-    'http://purl.org/dc/terms/modified': sparqlEscapeDateTime,
-    'http://purl.org/dc/terms/format': sparqlEscapeString,
-    'http://mu.semte.ch/vocabularies/core/uuid': sparqlEscapeString,
-    'http://dbpedia.org/ontology/fileExtension': sparqlEscapeString,
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName': sparqlEscapeString,
-    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize': sparqlEscapeNumber,
-};
+export const ATTACHMENT_PREDICATES = [
+    'http://purl.org/dc/terms/created',
+    'http://purl.org/dc/terms/modified',
+    'http://purl.org/dc/terms/format',
+    'http://mu.semte.ch/vocabularies/core/uuid',
+    'http://dbpedia.org/ontology/fileExtension',
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
+];
 
-export const DOWNLOAD_PREDICATES = {
-    'http://mu.semte.ch/vocabularies/core/uuid': sparqlEscapeString,
-};
+export const DOWNLOAD_PREDICATES = [
+    'http://purl.org/dc/terms/created',
+    'http://purl.org/dc/terms/modified',
+    'http://purl.org/dc/terms/format',
+    'http://mu.semte.ch/vocabularies/core/uuid',
+    'http://dbpedia.org/ontology/fileExtension',
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName',
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize',
+    'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated',
+];
+
+export const SOURCES_PREDICATES = [
+    'http://mu.semte.ch/vocabularies/core/uuid',
+    'http://purl.org/dc/terms/created',
+    'http://purl.org/dc/terms/modified',
+    'http://www.w3.org/2006/vcard/ns#fn',
+    'http://www.w3.org/2006/vcard/ns#family-name',
+    'http://www.w3.org/2006/vcard/ns#given-name',
+    'http://www.w3.org/2006/vcard/ns#role',
+    // http://www.w3.org/ns/adms#status
+    // http://mu.semte.ch/vocabularies/ext/hasMobile
+    // http://www.w3.org/2006/vcard/ns#hasTelephone
+    // http://www.w3.org/2006/vcard/ns#hasEmail
+];
+

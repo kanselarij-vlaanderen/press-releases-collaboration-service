@@ -1,8 +1,8 @@
 import { sparqlEscapeUri, query } from 'mu';
-import { updateSudo as update } from '@lblod/mu-auth-sudo';
+import { updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
-import { getPressReleaseAttachmentsQueries } from './attachments.sparql';
+import { getPressReleaseAttachmentInsertQueries, getPressReleaseAttachmentsQueries } from './attachments.sparql';
 import { getPressReleaseSourcesQueries } from './sources.sparql';
 
 export async function getPressRelease(pressReleaseURI) {
@@ -28,17 +28,13 @@ export async function getPressRelease(pressReleaseURI) {
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
-export async function copyPressReleaseRelations(pressReleaseURI, tempGraphURI) {
-    const attachmentQueries = await getPressReleaseAttachmentsQueries(pressReleaseURI, tempGraphURI);
-    const sourcesQueries = await getPressReleaseSourcesQueries(pressReleaseURI, tempGraphURI);
+export async function copyPressReleaseRelationsToTemporaryGraph(pressReleaseURI, tempGraphURI) {
+    const attachmentInsertQueries = await getPressReleaseAttachmentInsertQueries(pressReleaseURI, tempGraphURI);
+    // const sourcesQueries = await getPressReleaseSourcesQueries(pressReleaseURI, tempGraphURI);
 
-    for(let attachmentQuery of attachmentQueries){
-        await update(attachmentQuery);
+    for (let attachmentInsertQuery of attachmentInsertQueries) {
+        await updateSudo(attachmentInsertQuery);
     }
 
-    for (let sourcesQuery of sourcesQueries){
-        await update(sourcesQuery);
-    }
     // telefoon/mobile/email
-    // TODO: Execute queries
 }

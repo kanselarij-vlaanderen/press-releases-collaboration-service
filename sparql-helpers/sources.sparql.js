@@ -1,4 +1,4 @@
-import { PREFIXES } from './constants.sparql';
+import { SOURCES_PREDICATES, PREFIXES } from './constants.sparql';
 import { mapBindingValue, mapProperty } from '../helpers/generic-helpers';
 import { sparqlEscapeUri, query } from 'mu';
 
@@ -40,7 +40,7 @@ async function getSourceProperties(source) {
 
 export async function getInsertSourceQuery(source, graph) {
     const sourceProperties = source.properties
-    .map(mapProperty)
+    .map((item)=> mapProperty(item, SOURCES_PREDICATES))
     .filter(item => item.length )
     .join(';\n');
 

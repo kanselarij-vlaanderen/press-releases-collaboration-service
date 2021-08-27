@@ -1,10 +1,11 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
 import { getCollaborationActivityById, getCollaborators } from './sparql-helpers/collaboration-activities.sparql';
 import {
-    copyPressReleaseRelations,
-    getPressRelease,
+    copyPressReleaseRelationsToTemporaryGraph, getPressRelease,
 } from './sparql-helpers/press-release.sparql';
-import { getOrganizationIdFromHeaders } from './helpers/generic-helpers';
+import { getOrganizationURIFromHeaders } from './helpers/generic-helpers';
+
+const TEMP_GRAPH = `http://mu.semte.ch/graphs/tmp-data-share/8a354196-97ef-46bf-be96-5884c7e974b3`;
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     try {
@@ -20,13 +21,13 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         // Check if user has the right to share the press release,
         // by checking if the press-release creator.id is the same as the organizationId in the request headers.
         // if this is not the case, send a 403 (Forbidden) response
-        const requestedByOrganizationId = await getOrganizationIdFromHeaders(req.headers);
-        if ((pressRelease.creatorId !== requestedByOrganizationId) || !requestedByOrganizationId) {
+        const requestedByOrganizationURI = await getOrganizationURIFromHeaders(req.headers);
+        if ((pressRelease.creatorURI !== requestedByOrganizationURI) || !requestedByOrganizationURI) {
             return res.sendStatus(403);
         }
 
         // create temporary copy
-        await copyPressReleaseRelations(collaborationActivity.pressReleaseURI, `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`);
+        await copyPressReleaseRelationsToTemporaryGraph(collaborationActivity.pressReleaseURI, TEMP_GRAPH);
         // await copyPressRelease();
 
         // get all the collaborators related to the collaborationActivity
@@ -46,4 +47,5 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
 
 // use mu errorHandler middleware.
 app.use(errorHandler);
+
 
