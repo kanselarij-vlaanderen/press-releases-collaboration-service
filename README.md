@@ -1,4 +1,4 @@
-# Press release email generator service
+# Press release collaboration service
 
 // todo
 
@@ -22,8 +22,13 @@ services:
       - ../press-release-collaboration-service/:/app/
 ```
 
-and add the following route to the 
+and add the following route to the dispatcher config (```config/dispatcher/dispatcher.ex```)
 
+```elixir
+post "/collaboration-activities/:id/share", @json do
+    forward conn, [], "http://press-releases-collaboration-service/collaboration-activities/" <> id <> "/share"
+end
+```
 
 # Endpoints
 
