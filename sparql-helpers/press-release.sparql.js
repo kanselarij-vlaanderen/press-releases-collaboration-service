@@ -6,6 +6,9 @@ import { getPressReleaseAttachmentInsertQueries, getPressReleaseAttachmentsQueri
 import { getPressReleaseSourcesQueries } from './sources.sparql';
 
 export async function getPressRelease(pressReleaseURI) {
+
+    // TODO: Refactor OPTIONALS
+
     const queryResult = await query(`
     ${PREFIXES}
 
@@ -16,13 +19,24 @@ export async function getPressRelease(pressReleaseURI) {
         ?creatorURI                             mu:uuid             ?creatorId.
        
         OPTIONAL {
-            ${sparqlEscapeUri(pressReleaseURI)} nie:title           ?title;
-                                                nie:htmlContent     ?htmlContent; 
-                                                dct:abstract        ?abstract; 
-                                                nie:keyword         ?keyword; 
-                                                dct:created         ?created; 
-                                                dct:modified         ?modified.
+            ${sparqlEscapeUri(pressReleaseURI)} nie:title           ?title.
+        } 
+        OPTIONAL {
+            ${sparqlEscapeUri(pressReleaseURI)} nie:htmlContent     ?htmlContent.
+        } 
+        OPTIONAL {
+            ${sparqlEscapeUri(pressReleaseURI)} dct:abstract        ?abstract.
         }
+        OPTIONAL {
+            ${sparqlEscapeUri(pressReleaseURI)} nie:keyword         ?keyword.
+        }
+        OPTIONAL {
+            ${sparqlEscapeUri(pressReleaseURI)} dct:created         ?created.
+        }
+        OPTIONAL {
+            ${sparqlEscapeUri(pressReleaseURI)} dct:modified         ?modified.
+        }
+        
     }
     `);
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
