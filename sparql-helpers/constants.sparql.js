@@ -1,5 +1,9 @@
 import { sparqlEscapeUri } from 'mu';
 
+export const UPDATE_BATCH_SIZE = parseInt(process.env.UPDATE_BATCH_SIZE) || 10;
+export const SELECT_BATCH_SIZE = parseInt(process.env.SELECT_BATCH_SIZE) || 1000;
+export const COLLABORATOR_GRAPH_PREFIX = process.env.COLLABORATOR_GRAPH_PREFIX || 'http://mu.semte.ch/graphs/organizations/';
+
 export const PREFIXES = `
     PREFIX mu: ${sparqlEscapeUri('http://mu.semte.ch/vocabularies/core/')}
     PREFIX ext: ${sparqlEscapeUri('http://mu.semte.ch/vocabularies/ext/')}
@@ -17,6 +21,19 @@ export const PREFIXES = `
     PREFIX skos: ${sparqlEscapeUri('http://www.w3.org/2004/02/skos/core#')}
     PREFIX adms: ${sparqlEscapeUri('http://www.w3.org/ns/adms#')}
 `;
+
+export const PRESS_RELEASE_PROPERTIES = {
+    'resourcePredicate': 'fabio:PressRelease',
+    'predicates': [
+        'http://www.semanticdesktop.org/ontologies/2007/01/19/nie#title',
+        'http://www.semanticdesktop.org/ontologies/2007/01/19/nie#htmlContent',
+        'http://purl.org/dc/terms/abstract',
+        'http://www.semanticdesktop.org/ontologies/2007/01/19/nie#keyword',
+        'http://purl.org/dc/terms/created',
+        'http://purl.org/dc/terms/modified',
+        'http://purl.org/dc/terms/creator',
+    ],
+};
 
 export const LINKED_RESOURCES = [
     {

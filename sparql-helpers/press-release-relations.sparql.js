@@ -1,20 +1,13 @@
 import { sparqlEscapeUri, query } from 'mu';
 import { PREFIXES, LINKED_RESOURCES } from './constants.sparql';
-import { toStatements } from '../helpers/generic-helpers';
+import { toInsertQuery, toStatements } from '../helpers/generic-helpers';
 
 export async function getPressReleaseRelationsInsertQuery(pressReleaseURI, tempGraphURI) {
     const statements = []
     for(const resource of LINKED_RESOURCES){
         statements.push(await getChildRelationStatements(pressReleaseURI, resource)) ;
     }
-    return `
-    ${PREFIXES}
-    INSERT DATA {
-        GRAPH ${sparqlEscapeUri(tempGraphURI)}{
-           ${statements.join(' ')}
-        }
-    }
-    `;
+   return toInsertQuery(statements, tempGraphURI)
 }
 
 
@@ -57,6 +50,26 @@ async function getLinkedResources(parentURI, resourceConfig) {
     `)).results.bindings.map((i) => {
         // add the parentURI manually since we already have it (needed for generating statements).
         i.subject = i.relatedResource;
+        return i;
+    });
+}
+
+
+export async function getProperties(resourceURI, resourceConfig) {
+    return (await query(` 
+    ${PREFIXES}
+    
+    SELECT ?predicate ?object
+    WHERE {
+        ${sparqlEscapeUri(resourceURI)}     a                                        ${resourceConfig.resourcePredicate};
+                                            ?predicate                               ?object .
+        VALUES ?predicate {
+            ${resourceConfig.predicates.map((i) => sparqlEscapeUri(i)).join(' ')}
+        }
+    }
+    `)).results.bindings.map((i) => {
+        // add the parentURI manually since we already have it (needed for generating statements).
+        i.subject = {value: resourceURI, type: 'uri'};
         return i;
     });
 }

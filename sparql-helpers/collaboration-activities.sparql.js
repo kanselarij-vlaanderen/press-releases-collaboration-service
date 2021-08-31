@@ -7,7 +7,7 @@ export async function getCollaborationActivityById(id) {
     const queryResult = await query(`
     ${PREFIXES}
     
-    SELECT ?collaborationActivityURI ?pressReleaseURI ?startedAtTime ?editor
+    SELECT ?collaborationActivityURI ?pressReleaseURI ?startedAtTime ?editor ?editorId
     WHERE {
         ?collaborationActivityURI   a                   ext:CollaborationActivity;
                                     mu:uuid             ${sparqlEscapeString(id)};
