@@ -1,6 +1,6 @@
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
-import { SELECT_BATCH_SIZE, UPDATE_BATCH_SIZE } from '../sparql-helpers/constants.sparql';
 import { escape } from './generic-helpers';
+import { SELECT_BATCH_SIZE, UPDATE_BATCH_SIZE } from '../config';
 
 /**
  * Move all triples of one graph to another graph

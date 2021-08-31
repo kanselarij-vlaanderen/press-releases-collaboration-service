@@ -1,7 +1,7 @@
 import { sparqlEscapeString, sparqlEscapeUri, query } from 'mu';
-import { PREFIXES } from './constants.sparql';
 import { mapBindingValue } from '../helpers/generic-helpers';
 import { updateSudo } from '@lblod/mu-auth-sudo';
+import { PREFIXES } from '../config';
 
 export async function getCollaborationActivityById(id) {
     const queryResult = await query(`

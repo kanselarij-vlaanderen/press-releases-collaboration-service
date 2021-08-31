@@ -1,6 +1,5 @@
 import { query, sparqlEscapeUri, sparqlEscapeString } from 'mu';
-import { PREFIXES, SELECT_BATCH_SIZE, UPDATE_BATCH_SIZE } from '../sparql-helpers/constants.sparql';
-import { updateSudo } from '@lblod/mu-auth-sudo';
+import { PREFIXES } from '../config';
 
 export function handleGenericError(e, next) {
     console.error(e);

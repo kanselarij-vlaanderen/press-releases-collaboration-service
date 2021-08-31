@@ -1,37 +1,37 @@
 import { sparqlEscapeUri, query } from 'mu';
-import { PREFIXES, LINKED_RESOURCES } from './constants.sparql';
 import { toInsertQuery, toStatements } from '../helpers/generic-helpers';
+import { LINKED_RESOURCES, PREFIXES } from '../config';
 
 export async function getPressReleaseRelationsInsertQuery(pressReleaseURI, tempGraphURI) {
-    const statements = []
-    for(const resource of LINKED_RESOURCES){
-        statements.push(await getChildRelationStatements(pressReleaseURI, resource)) ;
+    const statements = [];
+    for (const resource of LINKED_RESOURCES) {
+        statements.push(await getChildRelationStatements(pressReleaseURI, resource));
     }
-   return toInsertQuery(statements, tempGraphURI)
+    return toInsertQuery(statements, tempGraphURI);
 }
 
 
 async function getChildRelationStatements(parentURI, resourceConfig) {
-        const linkedResourceItems = await getLinkedResources(parentURI, resourceConfig);
-        const resourceStatements = toStatements(linkedResourceItems);
-        const statements = [resourceStatements];
+    const linkedResourceItems = await getLinkedResources(parentURI, resourceConfig);
+    const resourceStatements = toStatements(linkedResourceItems);
+    const statements = [resourceStatements];
 
-        for(let linkedResource of linkedResourceItems){
-            // check if relation is inverse, and accordingly add statements to link every resource to it's parent
-            if(!resourceConfig.inverse){
+    for (let linkedResource of linkedResourceItems) {
+        // check if relation is inverse, and accordingly add statements to link every resource to it's parent
+        if (!resourceConfig.inverse) {
             statements.push(`${sparqlEscapeUri(parentURI)} ${resourceConfig.relationPredicate} ${sparqlEscapeUri(linkedResource.subject.value)}.`);
-            } else{
-                statements.push(`${sparqlEscapeUri(linkedResource.subject.value)} ${resourceConfig.relationPredicate} ${sparqlEscapeUri(parentURI)}.`);
-            }
+        } else {
+            statements.push(`${sparqlEscapeUri(linkedResource.subject.value)} ${resourceConfig.relationPredicate} ${sparqlEscapeUri(parentURI)}.`);
         }
+    }
 
-        if (resourceConfig.relations && linkedResourceItems.length) {
-            for (const childRelation of resourceConfig.relations) {
-                const childRelationStatements = await getChildRelationStatements(linkedResourceItems[0].subject.value, childRelation);
-                statements.push(childRelationStatements);
-            }
+    if (resourceConfig.relations && linkedResourceItems.length) {
+        for (const childRelation of resourceConfig.relations) {
+            const childRelationStatements = await getChildRelationStatements(linkedResourceItems[0].subject.value, childRelation);
+            statements.push(childRelationStatements);
         }
-        return statements.join(' ');
+    }
+    return statements.join(' ');
 }
 
 async function getLinkedResources(parentURI, resourceConfig) {
@@ -41,7 +41,7 @@ async function getLinkedResources(parentURI, resourceConfig) {
     SELECT ?relatedResource ?predicate ?object
     WHERE {
         ${sparqlEscapeUri(parentURI)}     a                                        ${resourceConfig.parentPredicate};
-                                          ${(resourceConfig.inverse ? '^' : '' ) + resourceConfig.relationPredicate}       ?relatedResource .
+                                          ${(resourceConfig.inverse ? '^' : '') + resourceConfig.relationPredicate}       ?relatedResource .
         ?relatedResource                  ?predicate                               ?object .
         VALUES ?predicate {
             ${resourceConfig.predicates.map((i) => sparqlEscapeUri(i)).join(' ')}

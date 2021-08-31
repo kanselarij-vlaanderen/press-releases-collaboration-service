@@ -9,10 +9,9 @@ import {
     copyPressReleaseRelationsToTemporaryGraph, getPressReleaseCreator,
 } from './sparql-helpers/press-release.sparql';
 import { getOrganizationURIFromHeaders } from './helpers/generic-helpers';
-import { COLLABORATOR_GRAPH_PREFIX } from './sparql-helpers/constants.sparql';
+import { COLLABORATOR_GRAPH_PREFIX } from './config.js';
 import { moveGraph, removeGraph } from './helpers/graph-helpers';
 
-const TEMP_GRAPH = `http://mu.semte.ch/graphs/tmp-data-share/8a354196-97ef-46bf-be96-5884c7e974b3`;
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     try {
@@ -37,15 +36,18 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
 
         // create temporary copy
-        await copyCollaborationActivityToTemporaryGraph(collaborationActivity, collaborators, TEMP_GRAPH);
-        await copyPressReleaseRelationsToTemporaryGraph(collaborationActivity.pressReleaseURI, TEMP_GRAPH);
-        await copyPressReleaseProperties(collaborationActivity.pressReleaseURI, TEMP_GRAPH);
+        const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
+        await copyCollaborationActivityToTemporaryGraph(collaborationActivity, collaborators, tempGraph);
+        await copyPressReleaseRelationsToTemporaryGraph(collaborationActivity.pressReleaseURI, tempGraph);
+        await copyPressReleaseProperties(collaborationActivity.pressReleaseURI, tempGraph);
 
         for (const collaborator of collaborators) {
-            await moveGraph(TEMP_GRAPH, `${COLLABORATOR_GRAPH_PREFIX}${collaborator.collaboratorId}`);
+            // for every collaborator linked to the collaboration activity, the temporary graph is copied.
+            await moveGraph(tempGraph, `${COLLABORATOR_GRAPH_PREFIX}${collaborator.collaboratorId}`);
         }
 
-        await removeGraph(TEMP_GRAPH);
+        // remove temporary graph
+        await removeGraph(tempGraph);
 
         res.sendStatus(202);
     } catch (err) {
@@ -54,8 +56,5 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     }
 });
 
-
 // use mu errorHandler middleware.
 app.use(errorHandler);
-
-

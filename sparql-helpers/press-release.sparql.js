@@ -1,8 +1,8 @@
 import { sparqlEscapeUri, query } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
-import { PREFIXES, PRESS_RELEASE_PROPERTIES } from './constants.sparql';
 import { mapBindingValue, toInsertQuery, toStatements } from '../helpers/generic-helpers';
 import { getPressReleaseRelationsInsertQuery, getProperties } from './press-release-relations.sparql';
+import { PREFIXES, PRESS_RELEASE_PROPERTIES } from '../config';
 
 export async function getPressReleaseCreator(pressReleaseURI) {
     const queryResult = await query(`
@@ -25,12 +25,9 @@ export async function copyPressReleaseRelationsToTemporaryGraph(pressReleaseURI,
 
 export async function copyPressReleaseProperties(pressReleaseURI, tempGraphURI) {
     const properties = await getProperties(pressReleaseURI, PRESS_RELEASE_PROPERTIES);
-    console.log('::::::::::::::::  PROPERTIES ::::::::::::::: \n', properties);
     const statements = toStatements(properties);
-    console.log('::::::::::::::::  STATEMENTS ::::::::::::::: \n', statements);
     const insertQuery = toInsertQuery(statements, tempGraphURI, false);
     await updateSudo(insertQuery);
-
 }
 
 

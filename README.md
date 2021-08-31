@@ -1,6 +1,7 @@
 # Press release collaboration service
 
-// todo
+This service has an endpoint that takes care of copying a press release and all related resources needed when 2 organisations want to share/collaborate on a press release.
+The fields and relations can be defined in ```./config.js```
 
 ## How to
 
@@ -39,10 +40,14 @@ end
 | status | description |
 |-------|-------------|
 | 202 | Accepted |
-|403| Forbidden: indien de request niet uitgevoerd wordt door een gebruiker die deel uitmaakt van het master-kabinet dat het persbericht aangemaakt heeft (af te leiden uit de session-uri in de request headers)|
+|403 | Forbidden: indien de request niet uitgevoerd wordt door een gebruiker die deel uitmaakt van het master-kabinet dat het persbericht aangemaakt heeft (af te leiden uit de session-uri in de request headers)|
 
 # Environment
 
 | Key | type | default | description |
 |-----|------|---------|-------------|
-|  |  |  |  |
+| UPDATE_BATCH_SIZE | number | 10 | batch size for moving items between graphs |
+| SELECT_BATCH_SIZE | number | 1000 | batch size selectiing items from graphs |
+| COLLABORATOR_GRAPH_PREFIX | string | 'http://mu.semte.ch/graphs/organizations/' | the prefix to be used for the target graph where the collaborator data will be copied. the collaborator id will be added to the end. |
+
+
