@@ -8,11 +8,10 @@ export async function getPressReleaseCreator(pressReleaseURI) {
     const queryResult = await query(`
     ${PREFIXES}
 
-    SELECT ?creatorURI ?creatorId 
+    SELECT ?creatorURI 
     WHERE {
         ${sparqlEscapeUri(pressReleaseURI)}     a                   fabio:PressRelease;
                                                 dct:creator         ?creatorURI.
-        ?creatorURI                             mu:uuid             ?creatorId. 
     }
     `);
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
@@ -25,7 +24,6 @@ export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGrap
         statements.push(toStatements(properties));
     }
     const insertQuery = toInsertQuery(statements, tempGraphURI);
-
     return await updateSudo(insertQuery);
 }
 

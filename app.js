@@ -1,9 +1,5 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
-import {
-    copyCollaborationActivityToTemporaryGraph,
-    getCollaborationActivityById,
-    getCollaborators,
-} from './sparql-helpers/collaboration-activities.sparql';
+import { getCollaborationActivityById, getCollaborators } from './sparql-helpers/collaboration-activities.sparql';
 import { copyPressReleaseToTemporaryGraph, getPressReleaseCreator } from './sparql-helpers/press-release.sparql';
 import { getOrganizationURIFromHeaders } from './helpers/generic-helpers';
 import { moveGraph, removeGraph } from './helpers/graph-helpers';
@@ -18,11 +14,12 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         if (!collaborationActivity) {
             return res.sendStatus(404);
         }
-        // retrieve the press-release related to the collaborationActivity
+
+        // retrieve the press-release creator
         const pressReleaseCreator = await getPressReleaseCreator(collaborationActivity.pressReleaseURI);
 
         // Check if user has the right to share the press release,
-        // by checking if the press-release creator.id is the same as the organizationId in the request headers.
+        // by checking if the press-release creator URI is the same as the organization URI in the request headers.
         // if this is not the case, send a 403 (Forbidden) response
         const requestedByOrganizationURI = await getOrganizationURIFromHeaders(req.headers);
         if ((pressReleaseCreator.creatorURI !== requestedByOrganizationURI) || !requestedByOrganizationURI) {
@@ -32,17 +29,20 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         // get all the collaborators related to the collaborationActivity
         const collaborators = await getCollaborators(collaborationActivity.collaborationActivityURI);
 
-        // create temporary copy
+        // create temporary copy of press-press release and all related resources defined in config.json
         const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
-        await copyCollaborationActivityToTemporaryGraph(collaborationActivity, collaborators, tempGraph);
+        console.log(`Creating copy of press-release ${collaborationActivity.pressReleaseURI} to temporary graph ${tempGraph}`);
         await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseURI, tempGraph);
 
         for (const collaborator of collaborators) {
             // for every collaborator linked to the collaboration activity, the temporary graph is copied.
-            await moveGraph(tempGraph, `${COLLABORATOR_GRAPH_PREFIX}${collaborator.collaboratorId}`);
+            const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.collaboratorId}`;
+            console.log(`Moving data from temporary graph to collaborator graph ( ${target} )`);
+            await moveGraph(tempGraph, target);
         }
 
         // remove temporary graph
+        console.log(`Removing temporary graph ( ${tempGraph} )`)
         await removeGraph(tempGraph);
 
         res.sendStatus(204);

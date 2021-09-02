@@ -8,7 +8,9 @@
         "http://www.semanticdesktop.org/ontologies/2007/01/19/nie#keyword",
         "http://purl.org/dc/terms/created",
         "http://purl.org/dc/terms/modified",
-        "http://purl.org/dc/terms/creator"
+        "http://purl.org/dc/terms/creator",
+        "http://www.semanticdesktop.org/ontologies/2007/01/19/nie#hasPart",
+        "http://purl.org/dc/terms/source"
       ]
     },
     {
@@ -23,6 +25,14 @@
         "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileSize",
         "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileCreated",
         "http://www.semanticdesktop.org/ontologies/2007/01/19/nie#dataSource"
+      ]
+    },
+    {
+      "path": "^prov:used",
+      "properties": [
+        "http://www.w3.org/ns/prov#startedAtTime",
+        "http://mu.semte.ch/vocabularies/ext/currentEditor",
+        "http://www.w3.org/ns/prov#wasAssociatedWith"
       ]
     },
     {
