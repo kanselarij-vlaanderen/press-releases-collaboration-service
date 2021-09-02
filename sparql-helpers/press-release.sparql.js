@@ -8,7 +8,7 @@ export async function getPressReleaseCreator(pressReleaseURI) {
     const queryResult = await query(`
     ${PREFIXES}
 
-    SELECT ?creatorURI 
+    SELECT ?creatorURI
     WHERE {
         ${sparqlEscapeUri(pressReleaseURI)}     a                   fabio:PressRelease;
                                                 dct:creator         ?creatorURI.

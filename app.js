@@ -5,7 +5,6 @@ import { getOrganizationURIFromHeaders } from './helpers/generic-helpers';
 import { moveGraph, removeGraph } from './helpers/graph-helpers';
 import { COLLABORATOR_GRAPH_PREFIX } from './constants';
 
-
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     try {
         // get the collaboration activity by the requested id, if it is not found, return status 404 (Not found)
@@ -31,18 +30,18 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
 
         // create temporary copy of press-press release and all related resources defined in config.json
         const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
-        console.log(`Creating copy of press-release ${collaborationActivity.pressReleaseURI} to temporary graph ${tempGraph}`);
+        console.info(`Creating copy of press-release ${collaborationActivity.pressReleaseURI} to temporary graph ${tempGraph}`);
         await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseURI, tempGraph);
 
         for (const collaborator of collaborators) {
             // for every collaborator linked to the collaboration activity, the temporary graph is copied.
             const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.collaboratorId}`;
-            console.log(`Moving data from temporary graph to collaborator graph ( ${target} )`);
+            console.info(`Moving data from temporary graph to collaborator graph ( ${target} )`);
             await moveGraph(tempGraph, target);
         }
 
         // remove temporary graph
-        console.log(`Removing temporary graph ( ${tempGraph} )`)
+        console.info(`Removing temporary graph ( ${tempGraph} )`)
         await removeGraph(tempGraph);
 
         res.sendStatus(204);
