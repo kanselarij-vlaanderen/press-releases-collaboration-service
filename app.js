@@ -4,13 +4,10 @@ import {
     getCollaborationActivityById,
     getCollaborators,
 } from './sparql-helpers/collaboration-activities.sparql';
-import {
-    copyPressReleaseProperties,
-    copyPressReleaseRelationsToTemporaryGraph, getPressReleaseCreator,
-} from './sparql-helpers/press-release.sparql';
+import { copyPressReleaseToTemporaryGraph, getPressReleaseCreator } from './sparql-helpers/press-release.sparql';
 import { getOrganizationURIFromHeaders } from './helpers/generic-helpers';
-import { COLLABORATOR_GRAPH_PREFIX } from './config.js';
 import { moveGraph, removeGraph } from './helpers/graph-helpers';
+import { COLLABORATOR_GRAPH_PREFIX } from './constants';
 
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
@@ -38,8 +35,7 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         // create temporary copy
         const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
         await copyCollaborationActivityToTemporaryGraph(collaborationActivity, collaborators, tempGraph);
-        await copyPressReleaseRelationsToTemporaryGraph(collaborationActivity.pressReleaseURI, tempGraph);
-        await copyPressReleaseProperties(collaborationActivity.pressReleaseURI, tempGraph);
+        await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseURI, tempGraph);
 
         for (const collaborator of collaborators) {
             // for every collaborator linked to the collaboration activity, the temporary graph is copied.

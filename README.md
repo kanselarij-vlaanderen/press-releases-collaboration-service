@@ -1,7 +1,7 @@
 # Press release collaboration service
 
 This service has an endpoint that takes care of copying a press release and all related resources needed when 2 organisations want to share/collaborate on a press release.
-The fields and relations can be defined in ```./config.js```
+The fields and relations can be defined in ```./config.json```
 
 ## How to
 
