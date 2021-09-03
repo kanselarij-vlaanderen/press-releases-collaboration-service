@@ -49,15 +49,8 @@
         "http://www.w3.org/2006/vcard/ns#hasEmail",
         "http://www.w3.org/2006/vcard/ns#hasTelephone",
         "http://mu.semte.ch/vocabularies/ext/hasMobile",
-        "http://purl.org/dc/terms/creator"
-      ]
-    },
-    {
-      "type": "vcard:Organization",
-      "path": "dct:source / ^org:hasMember",
-      "_comment": "Organizations are stored in public graph. We only copy data stored in kabinet-graph.",
-      "properties": [
-        "http://www.w3.org/ns/org#hasMember"
+        "http://purl.org/dc/terms/creator",
+        "^http://www.w3.org/ns/org#hasMember"
       ]
     },
     {

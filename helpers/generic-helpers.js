@@ -28,6 +28,18 @@ export async function getOrganizationURIFromHeaders(headers) {
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0].organisationURI : null;
 }
 
+export function isInverse(predicate) {
+  return predicate && predicate.startsWith('^');
+}
+
+export function sparqlEscapePredicate(predicate) {
+  return isInverse(predicate) ? `^<${predicate.slice(1)}>` : `<${predicate}>`;
+}
+
+export function normalizePredicate(predicate) {
+  return isInverse(predicate) ? predicate.slice(1) : predicate;
+}
+
 export function toStatements(triples) {
     return triples.map(function (t) {
         const subject = escape(t.subject);
@@ -47,7 +59,6 @@ export function toInsertQuery(statementsString, graph) {
     }
     `;
 }
-
 
 export function escape(rdfTerm) {
     const {type, value, datatype, 'xml:lang': lang} = rdfTerm;
