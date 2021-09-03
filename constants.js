@@ -20,4 +20,5 @@ export const PREFIXES = `
     PREFIX dbpedia: ${sparqlEscapeUri('http://purl.org/dc/terms/')}
     PREFIX skos: ${sparqlEscapeUri('http://www.w3.org/2004/02/skos/core#')}
     PREFIX adms: ${sparqlEscapeUri('http://www.w3.org/ns/adms#')}
+    PREFIX org: ${sparqlEscapeUri('http://www.w3.org/ns/org#')}
 `;
