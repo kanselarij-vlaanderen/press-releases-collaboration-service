@@ -1,7 +1,8 @@
 # Press release collaboration service
 
-This service has an endpoint that takes care of copying a press release and all related resources needed when 2 organisations want to share/collaborate on a press release.
-The fields and relations can be defined in ```./config.json```
+This service has an endpoint that takes care of copying a press release and all related resources needed when 2
+organisations want to share/collaborate on a press release. The fields and relations can be defined
+in ```./config.json```
 
 ## How to
 
@@ -13,7 +14,7 @@ service to your existing docker-compose.override.yaml.
 
 ```yaml
 services:
-  press-releases-collaboration-service:
+  collaboration:
     image: semtech/mu-javascript-template
     ports:
       - <available-port-on-device>:80
@@ -27,69 +28,54 @@ and add the following route to the dispatcher config (```config/dispatcher/dispa
 
 ```elixir
 post "/collaboration-activities/:id/share", @json do
-    forward conn, [], "http://press-releases-collaboration-service/collaboration-activities/" <> id <> "/share"
+  forward conn, [], "http://press-releases-collaboration-service/collaboration-activities/" <> id <> "/share"
 end
 ```
 
 # Configuration
-to copy a press release, the confguration is defined as following:
 
-```javascript
-// definine an arrray LINKED_RESOURCES that contains the linked resources of a press release
-export const LINKED_RESOURCES = [
-    // every resource has the following structure:
+The resources to be copied are defined in the ```config.json```
+
+```json
+{
+  "resources": [
     {
-        // parentPredicate: the parent's predicate of the current resource,
-        // for top level resources this should be the fabio:PressRelease
-        'parentPredicate': 'fabio:PressRelease',
-        // relationPredicate: the relation predicate between the resource and it's parent
-        'relationPredicate': 'nie:hasPart',
-        // resourcePredicate: the predicate of the resource itself
-        'resourcePredicate': 'nfo:FileDataObject',
-        // predicates: an array of the properties predicates to be copied if they exist in the db
-        'predicates': [
-            // if the dct:created exist on the orinal press release, it will be copied
-            'http://purl.org/dc/terms/created',
-            ...
-        ],
-        // the relations contains objects with the exact configuration as this one and can be nested as far as needed 
-        // (in other words the relation can have another relations array if it needs to be copied as well)
-        
-        'relations': [
-            {
-                'parentPredicate': 'nfo:FileDataObject', // parent in this case is the one we definied above
-                'relationPredicate': 'nie:dataSource',
-                'inverse': true, // if the relation between this resource and it's parent is inversed
-                'resourcePredicate': 'nfo:FileDataObject',
-                'relations': [...]
-            }
-        ]
-    }
-];
-
-// in PRESS_RELEASE_PROPERTIES we define the properties of the press release itself to be copied
-export const PRESS_RELEASE_PROPERTIES = {
-    // we only need to define the resource's predicate itself
-    'resourcePredicate': 'fabio:PressRelease',
-    // and the properties to be copied (predicates)
-    'predicates': [
-        'http://purl.org/dc/terms/created',
-        'http://purl.org/dc/terms/modified',
+      // the path is the resources relation to the press-relase
+      "path": "nie:hasPart / nie:dataSource",
+      "properties": [
+        // a list  of properties that should be copied from the related resource 
+        "http://purl.org/dc/terms/created",
         ...
-    ],
+      ]
+    },
+    {
+      // if th properties are from the press-release itself, path should not be defined.
+      "properties": [
+        "http://purl.org/dc/terms/created",
+        ...
+      ]
+    }
+  ]
 }
+
 ```
 
 # Endpoints
 
 ## POST /collaboration-activities/:id/share
 
+This endpoint searches for a collaboration-activity with the id specified in the url. 
+if found,  the related press release is copied to a temporary graph, and once all 
+related properties that are defined in the ```./config.json``` are copied to the temporary graph. 
+This temporary graph then gets copied into all collaborators linked to the collaboration-activity
+
 ### Responses
 
 | status | description |
 |-------|-------------|
 | 202 | Accepted |
-|403 | Forbidden: indien de request niet uitgevoerd wordt door een gebruiker die deel uitmaakt van het master-kabinet dat het persbericht aangemaakt heeft (af te leiden uit de session-uri in de request headers)|
+| 404 | Not Found: no collaboration-activity found with the provided id |
+|403 | Forbidden: if the request is executed by a user that is not part of the master-kabinet that created the press-release (derrived from the session-uri in the request headers)|
 
 # Environment
 

@@ -31,8 +31,8 @@
       "path": "^prov:used",
       "properties": [
         "http://www.w3.org/ns/prov#startedAtTime",
-        "http://mu.semte.ch/vocabularies/ext/currentEditor",
-        "http://www.w3.org/ns/prov#wasAssociatedWith"
+        "http://www.w3.org/ns/prov#wasAssociatedWith",
+        "http://www.w3.org/ns/prov#generated"
       ]
     },
     {
