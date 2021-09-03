@@ -41,7 +41,7 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
         }
 
         // remove temporary graph
-        console.info(`Removing temporary graph ( ${tempGraph} )`)
+        console.info(`Removing temporary graph ( ${tempGraph} )`);
         await removeGraph(tempGraph);
 
         res.sendStatus(204);

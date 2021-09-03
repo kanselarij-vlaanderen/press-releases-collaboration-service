@@ -37,12 +37,12 @@ export function toStatements(triples) {
     }).join('\n');
 }
 
-export function toInsertQuery(statements, graph) {
+export function toInsertQuery(statementsString, graph) {
     return `
     ${PREFIXES}
     INSERT DATA {
         GRAPH ${sparqlEscapeUri(graph)}{
-           ${statements.join(' ')}
+           ${statementsString}
         }
     }
     `;
