@@ -15,7 +15,7 @@
         "http://purl.org/dc/terms/source",
         "http://purl.org/dc/terms/creator",
         "http://www.semanticdesktop.org/ontologies/2007/01/19/nie#hasPart",
-        "http://data.vlaanderen.be/ns/besluitvorming#beleidsveld",
+        "https://data.vlaanderen.be/ns/besluitvorming#beleidsveld",
         "http://mu.semte.ch/vocabularies/ext/used"
       ]
     },
