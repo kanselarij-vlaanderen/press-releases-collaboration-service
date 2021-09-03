@@ -20,9 +20,11 @@ export async function getPressReleaseCreator(pressReleaseURI) {
 export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGraphURI) {
     for (const resourceConfig of RESOURCE_CONFIG.resources) {
         const properties = await getProperties(pressReleaseURI, resourceConfig);
-        const statements = toStatements(properties);
-        const insertQuery = toInsertQuery(statements, tempGraphURI);
-        await updateSudo(insertQuery);
+        if (properties.length) {
+            const statements = toStatements(properties);
+            const insertQuery = toInsertQuery(statements, tempGraphURI);
+            await updateSudo(insertQuery);
+        }
     }
 }
 
