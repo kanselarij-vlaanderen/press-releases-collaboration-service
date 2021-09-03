@@ -27,40 +27,23 @@ export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGrap
 }
 
 async function getProperties(pressReleaseURI, resourceConfig) {
-    let selectQuery;
-    let resultsMapper;
-
+    let pathToPressRelease;
     if (resourceConfig.path) {
-        selectQuery = `
+        pathToPressRelease = `${sparqlEscapeUri(pressReleaseURI)} ${resourceConfig.path}   ?subject .`;
+    } else {
+        pathToPressRelease = `BIND(${sparqlEscapeUri(pressReleaseURI)} as ?subject)`;
+    }
+
+    const result = await query(`
         ${PREFIXES}
-        SELECT ?relatedResource ?predicate ?object
+        SELECT ?subject ?predicate ?object
         WHERE {
-            ${sparqlEscapeUri(pressReleaseURI)}     a                       fabio:PressRelease;
-                                                    ${resourceConfig.path}   ?relatedResource .
-            ?relatedResource ?predicate ?object .
+            ${sparqlEscapeUri(pressReleaseURI)}     a                       fabio:PressRelease.
+            ${pathToPressRelease}
+            ?subject ?predicate ?object .
             VALUES ?predicate {
                    ${resourceConfig.properties.map((i) => sparqlEscapeUri(i)).join('\n')}
             }
-        }`;
-        resultsMapper = (i) => {
-            return {...i, subject: i.relatedResource};
-        };
-    } else {
-        selectQuery = `
-            ${PREFIXES}
-            SELECT ?predicate ?object
-            WHERE {
-                ${sparqlEscapeUri(pressReleaseURI)}     a                       fabio:PressRelease.
-                ${sparqlEscapeUri(pressReleaseURI)} ?predicate ?object .
-                VALUES ?predicate {
-                       ${resourceConfig.properties.map((i) => sparqlEscapeUri(i)).join('\n')}
-                }
-            }`;
-        resultsMapper = (i) => {
-            // add the parentURI manually since we already have it (needed for generating statements).
-            return {...i, subject: {value: pressReleaseURI, type: 'uri'}};
-        };
-    }
-
-    return (await query(selectQuery)).results.bindings.map(resultsMapper);
+    }`);
+    return result.results.bindings;
 }
