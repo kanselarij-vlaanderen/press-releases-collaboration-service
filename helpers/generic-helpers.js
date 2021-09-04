@@ -15,29 +15,43 @@ export function mapBindingValue(binding) {
     return result;
 }
 
-export async function getOrganizationURIFromHeaders(headers) {
+export async function getOrganizationFromHeaders(headers) {
     const sessionURI = headers['mu-session-id'];
     const queryResult = await query(`
     ${PREFIXES}
-    SELECT ?organisationURI
+    SELECT ?uri ?id
     WHERE {
-        ${sparqlEscapeUri(sessionURI)}  session:account / ^foaf:account / ^foaf:member ?organisationURI.
+        ${sparqlEscapeUri(sessionURI)}  session:account / ^foaf:account / ^foaf:member ?uri.
+        ?uri mu:uuid ?id.
     }
     `);
 
-    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0].organisationURI : null;
+    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
 export function isInverse(predicate) {
-  return predicate && predicate.startsWith('^');
+    return predicate && predicate.startsWith('^');
 }
 
 export function sparqlEscapePredicate(predicate) {
-  return isInverse(predicate) ? `^<${predicate.slice(1)}>` : `<${predicate}>`;
+    return isInverse(predicate) ? `^<${predicate.slice(1)}>` : `<${predicate}>`;
 }
 
 export function normalizePredicate(predicate) {
-  return isInverse(predicate) ? predicate.slice(1) : predicate;
+    return isInverse(predicate) ? predicate.slice(1) : predicate;
+}
+
+export async function getUserFromHeaders(headers) {
+    const sessionURI = headers['mu-session-id'];
+    const queryResult = await query(`
+    ${PREFIXES}
+    SELECT ?uri
+    WHERE {
+        ${sparqlEscapeUri(sessionURI)}  session:account / ^foaf:account ?uri.
+    }
+    `);
+
+    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
 export function toStatements(triples) {
