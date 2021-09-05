@@ -129,15 +129,15 @@ app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
     const claimingUser = await getUserFromHeaders(req.headers);
     const canDelete = await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
     if (!canDelete) {
-      // 409 if tbe token-claim it is not assigned to the user that made the request.
+      // 403 if tbe token-claim it is not assigned to the user that made the request.
       // (use cases: claim has already been automatically released or assigned to another user)
-      return res.sendStatus(409);
+      return res.sendStatus(403);
     }
 
     const collaborators = await getCollaborators(collaborationActivity.uri);
 
     for (const collaborator of collaborators) {
-      // for every collaborator linked to the collaboration activity, the token claim is added to their graphs.
+      // for every collaborator linked to the collaboration activity, the token claim is removed from their graphs.
       const targetGraph = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
       console.info(`Deleting token-claim data in collaborator graph ( ${targetGraph} )`);
       try {
