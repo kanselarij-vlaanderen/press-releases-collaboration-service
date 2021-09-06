@@ -47,6 +47,5 @@ export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
                                             prov:wasAttributedTo    ${sparqlEscapeUri(userUri)}.
   }
   `));
-  console.log(q);
   return q.boolean;
 }
