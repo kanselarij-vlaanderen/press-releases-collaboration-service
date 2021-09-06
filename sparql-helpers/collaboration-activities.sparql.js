@@ -3,7 +3,7 @@ import { mapBindingValue } from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
 
 export async function getCollaborationActivityById(id) {
-  const queryResult = await query(`
+    const queryResult = await query(`
     ${PREFIXES}
     
     SELECT ?uri ?pressReleaseUri ?tokenClaimUri
@@ -15,19 +15,20 @@ export async function getCollaborationActivityById(id) {
     }
     LIMIT 1
     `);
-  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
 export async function getCollaborators(collaborationActivityURI) {
-  const queryResult = await query(`
+    const queryResult = await query(`
     ${PREFIXES}
     
     SELECT ?uri ?id
     WHERE {
         ${sparqlEscapeUri(collaborationActivityURI)}    a                           ext:CollaborationActivity;
                                                         prov:wasAssociatedWith      ?uri.
-        ?uri                                            mu:uuid                     ?id.
+        ?uri                                            a                           vcard:Organization;
+                                                        mu:uuid                     ?id.
     }
     `);
-  return queryResult.results.bindings.map(mapBindingValue);
+    return queryResult.results.bindings.map(mapBindingValue);
 }

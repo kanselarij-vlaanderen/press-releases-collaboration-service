@@ -1,6 +1,12 @@
 import { sparqlEscapeUri, query } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
-import { mapBindingValue, toInsertQuery, toStatements, isInverse, normalizePredicate } from '../helpers/generic-helpers';
+import {
+    mapBindingValue,
+    toInsertQuery,
+    toStatements,
+    isInverse,
+    normalizePredicate,
+} from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
 import RESOURCE_CONFIG from '../config.json';
 
