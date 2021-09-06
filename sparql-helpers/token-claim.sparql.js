@@ -3,12 +3,10 @@ import { updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from '../constants';
 
 export async function createTokenClaims(userURI, collaborationActivityURI) {
-    // Generate new uri and created date for tokenClaim
     const id = generateUuid();
     const uri = 'http://themis.vlaanderen.be/id/tokenclaim/' + id;
     const createdDate = new Date();
 
-    // Create ext:TokenClaim
     return await updateSudo(`
     ${PREFIXES}
     INSERT {
@@ -29,7 +27,6 @@ export async function createTokenClaims(userURI, collaborationActivityURI) {
 }
 
 export async function deleteTokenClaims(tokenClaimURI, collaborationActivityURI) {
-    // Delete ext:TokenClaim
     return await updateSudo(`
     ${PREFIXES}
     DELETE {

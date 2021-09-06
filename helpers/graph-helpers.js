@@ -2,22 +2,11 @@ import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import { SELECT_BATCH_SIZE, UPDATE_BATCH_SIZE } from '../constants';
 import { escape } from './generic-helpers';
 
-/**
- * Move all triples of one graph to another graph
- *
- * @public
- */
 export async function moveGraph(source, target) {
     const triples = await getTriples(source);
     await insertInGraph(triples, target);
 }
 
-
-/**
- * Get all the triples from the given graph
- *
- * @private
- */
 async function getTriples(graph) {
     let triples = [];
     const count = await countTriples(graph);
@@ -94,11 +83,6 @@ export async function removeGraph(graph) {
     }
 }
 
-/**
- * Count the triples in the given graph
- *
- * @private
- */
 async function countTriples(graph) {
     const queryResult = await query(`
         SELECT (COUNT(*) as ?count)
