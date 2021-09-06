@@ -69,7 +69,7 @@ app.post('/collaboration-activities/:id/claims', async (req, res, next) => {
         // check if request is made by a user that s part of an organization that participates in the collaboration-activity
         const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
         const collaborators = await getCollaborators(collaborationActivity.uri);
-        if (collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) != null) {
+        if (collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
             return res.sendStatus(403);
         }
 
