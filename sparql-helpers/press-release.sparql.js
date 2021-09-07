@@ -1,6 +1,12 @@
 import { sparqlEscapeUri, query } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
-import { mapBindingValue, toInsertQuery, toStatements, isInverse, normalizePredicate } from '../helpers/generic-helpers';
+import {
+    mapBindingValue,
+    toInsertQuery,
+    toStatements,
+    isInverse,
+    normalizePredicate,
+} from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
 import RESOURCE_CONFIG from '../config.json';
 
@@ -8,10 +14,11 @@ export async function getPressReleaseCreator(pressReleaseURI) {
     const queryResult = await query(`
     ${PREFIXES}
 
-    SELECT ?creatorURI
+    SELECT ?uri ?id
     WHERE {
         ${sparqlEscapeUri(pressReleaseURI)}     a                   fabio:PressRelease;
-                                                dct:creator         ?creatorURI.
+                                                dct:creator         ?uri.
+        ?uri                                    mu:uuid             ?id.
     }
     `);
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;

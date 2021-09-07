@@ -6,11 +6,12 @@ export async function getCollaborationActivityById(id) {
     const queryResult = await query(`
     ${PREFIXES}
     
-    SELECT ?collaborationActivityURI ?pressReleaseURI
+    SELECT ?uri ?pressReleaseUri ?tokenClaimUri
     WHERE {
-        ?collaborationActivityURI   a                   ext:CollaborationActivity;
+        ?uri                        a                   ext:CollaborationActivity;
                                     mu:uuid             ${sparqlEscapeString(id)};
-                                    prov:used           ?pressReleaseURI.
+                                    prov:used           ?pressReleaseUri.
+        OPTIONAL { ?uri             prov:generated      ?tokenClaimUri }
     }
     LIMIT 1
     `);
@@ -21,11 +22,12 @@ export async function getCollaborators(collaborationActivityURI) {
     const queryResult = await query(`
     ${PREFIXES}
     
-    SELECT ?collaboratorURI ?collaboratorId
+    SELECT ?uri ?id
     WHERE {
         ${sparqlEscapeUri(collaborationActivityURI)}    a                           ext:CollaborationActivity;
-                                                        prov:wasAssociatedWith      ?collaboratorURI.
-        ?collaboratorURI                                mu:uuid                     ?collaboratorId.
+                                                        prov:wasAssociatedWith      ?uri.
+        ?uri                                            a                           vcard:Organization;
+                                                        mu:uuid                     ?id.
     }
     `);
     return queryResult.results.bindings.map(mapBindingValue);

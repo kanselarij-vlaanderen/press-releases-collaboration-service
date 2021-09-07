@@ -1,4 +1,4 @@
-import { query, sparqlEscapeUri, sparqlEscapeString } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeString } from 'mu';
 import { PREFIXES } from '../constants';
 
 export function handleGenericError(e, next) {
@@ -15,33 +15,20 @@ export function mapBindingValue(binding) {
     return result;
 }
 
-export async function getOrganizationURIFromHeaders(headers) {
-    const sessionURI = headers['mu-session-id'];
-    const queryResult = await query(`
-    ${PREFIXES}
-    SELECT ?organisationURI
-    WHERE {
-        ${sparqlEscapeUri(sessionURI)}  session:account / ^foaf:account / ^foaf:member ?organisationURI.
-    }
-    `);
-
-    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0].organisationURI : null;
-}
-
 export function isInverse(predicate) {
-  return predicate && predicate.startsWith('^');
+    return predicate && predicate.startsWith('^');
 }
 
 export function sparqlEscapePredicate(predicate) {
-  return isInverse(predicate) ? `^<${predicate.slice(1)}>` : `<${predicate}>`;
+    return isInverse(predicate) ? `^<${predicate.slice(1)}>` : `<${predicate}>`;
 }
 
 export function normalizePredicate(predicate) {
-  return isInverse(predicate) ? predicate.slice(1) : predicate;
+    return isInverse(predicate) ? predicate.slice(1) : predicate;
 }
 
 export function toStatements(triples) {
-    return triples.map(function (t) {
+    return triples.map(function(t) {
         const subject = escape(t.subject);
         const predicate = escape(t.predicate);
         const object = escape(t.object);
@@ -61,7 +48,7 @@ export function toInsertQuery(statementsString, graph) {
 }
 
 export function escape(rdfTerm) {
-    const {type, value, datatype, 'xml:lang': lang} = rdfTerm;
+    const { type, value, datatype, 'xml:lang': lang } = rdfTerm;
     if (type === 'uri') {
         return sparqlEscapeUri(value);
     } else if (type === 'literal' || type === 'typed-literal') {

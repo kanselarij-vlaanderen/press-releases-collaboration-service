@@ -1,9 +1,4 @@
 # Press release collaboration service
-
-This service has an endpoint that takes care of copying a press release and all related resources needed when 2
-organisations want to share/collaborate on a press release. The fields and relations can be defined
-in ```./config.json```
-
 ## How to
 
 ### Run the application in development mode
@@ -27,9 +22,17 @@ services:
 and add the following route to the dispatcher config (```config/dispatcher/dispatcher.ex```)
 
 ```elixir
-post "/collaboration-activities/:id/share", @json do
-  forward conn, [], "http://press-releases-collaboration-service/collaboration-activities/" <> id <> "/share"
-end
+  post "/collaboration-activities/:id/share", @json do
+    forward conn, [], "http://collaboration/collaboration-activities/" <> id <> "/share"
+  end
+
+  post "/collaboration-activities/:id/claims", @json do
+    forward conn, [], "http://collaboration/collaboration-activities/" <> id <> "/claims"
+  end
+
+  delete "/collaboration-activities/:id/claims", @json do
+    forward conn, [], "http://collaboration/collaboration-activities/" <> id <> "/claims"
+  end
 ```
 
 # Configuration
@@ -63,22 +66,44 @@ The resources to be copied are defined in the ```config.json```
 # Endpoints
 
 ## POST /collaboration-activities/:id/share
-
 This endpoint searches for a collaboration-activity with the id specified in the url. 
 if found,  the related press release is copied to a temporary graph, and once all 
 related properties that are defined in the ```./config.json``` are copied to the temporary graph. 
 This temporary graph then gets copied into all collaborators linked to the collaboration-activity
 
 ### Responses
-
 | status | description |
 |-------|-------------|
 | 202 | Accepted |
 | 404 | Not Found: no collaboration-activity found with the provided id |
 |403 | Forbidden: if the request is executed by a user that is not part of the master-kabinet that created the press-release (derrived from the session-uri in the request headers)|
 
-# Environment
+## POST /collaboration-activities/:id/claims
+This endpoint creates a token-claim for the collaboration-activity with the provided id. The user that makes the request 
+should be part of the collaboration-activity's collaborators and the token should not be already claimed.
 
+### Responses
+| status | description |
+|-------|-------------|
+| 201 | Created: created token-claim to all collaborator graphs |
+| 404 | Not Found: no collaboration-activity found with the provided id |
+| 403 | Forbidden: if the request is executed by a user that is not part of the collaborators linked to the press-release (derrived from the session-uri in the request headers)|
+| 409 | Conflict: if collaboration-activity already has a token-claim linked to it |
+
+## DELETE /collaboration-activities/:id/claims
+This endpoint deletes a token-claim for the collaboration-activity with the provided id. The user that makes the request
+should have the current token-claim assigned.
+
+### Responses
+| status | description |
+|-------|-------------|
+| 200 | Ok |
+| 404 | Not Found: no collaboration-activity found with the provided id |
+| 403 | Forbidden: if the request is executed by a user that is not the current owner of the token-claim |
+| 409 | Conflict: if there is no token-claim linked to the collaboration-activity |
+
+
+# Environment
 | Key | type | default | description |
 |-----|------|---------|-------------|
 | UPDATE_BATCH_SIZE | number | 10 | batch size for moving items between graphs |
