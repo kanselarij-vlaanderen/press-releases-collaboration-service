@@ -8,9 +8,9 @@ export async function getOrganizationFromHeaders(headers) {
     ${PREFIXES}
     SELECT ?uri ?id
     WHERE {
-        ${sparqlEscapeUri(sessionURI)}  session:account / ^foaf:account / ^foaf:member ?uri.
+        ${sparqlEscapeUri(sessionURI)}  ext:sessionGroup ?uri.
         ?uri mu:uuid ?id.
-    }
+    } LIMIT 1
     `);
 
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
@@ -23,7 +23,7 @@ export async function getUserFromHeaders(headers) {
     SELECT ?uri
     WHERE {
         ${sparqlEscapeUri(sessionURI)}  session:account / ^foaf:account ?uri.
-    }
+    } LIMIT 1
     `);
 
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
