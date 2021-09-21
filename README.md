@@ -104,7 +104,7 @@ should have the current token-claim assigned.
 
 ## PUT /collaboration-activities/:id
 This endpoint transfers the data related to the press-release that is linked to the collaboration-activity. 
-If the user is the current claimer of the token-claim, all fiields are copied, otherwise only the meta-data fiields are copied.
+If the user is the current claimer of the token-claim, all fields are copied, otherwise only the meta-data fields are copied.
 
 In the ```config.json``` it is possible to make the distinction between meta-fields by giving them a ```isMetadata``` property set to ```true```
 
