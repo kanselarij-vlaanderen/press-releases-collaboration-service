@@ -102,6 +102,20 @@ should have the current token-claim assigned.
 | 403 | Forbidden: if the request is executed by a user that is not the current owner of the token-claim |
 | 409 | Conflict: if there is no token-claim linked to the collaboration-activity |
 
+## PUT /collaboration-activities/:id
+This endpoint transfers the data related to the press-release that is linked to the collaboration-activity. 
+If the user is the current claimer of the token-claim, all fiields are copied, otherwise only the meta-data fiields are copied.
+
+In the ```config.json``` it is possible to make the distinction between meta-fields by giving them a ```isMetadata``` property set to ```true```
+
+
+### Responses
+| status | description |
+|-------|-------------|
+| 200 | OK: successfully copied the press-release / metadata to the collaborator graphs |
+| 404 | Not Found: no collaboration-activity found with the provided id |
+| 403 | Forbidden: if the request is executed by a user that is not part of the collaborators linked to the press-release (derrived from the session-uri in the request headers)|
+
 
 # Environment
 | Key | type | default | description |
