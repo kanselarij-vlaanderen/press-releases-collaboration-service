@@ -40,7 +40,7 @@ export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGrap
     }
 }
 
-export async function deletePressReleaseFromGraph(pressReleaseURI, GraphURI, metaOnly) {
+export async function deletePressReleaseFromGraph(pressReleaseURI, graphURI, metaOnly) {
     let resources = RESOURCE_CONFIG.resources;
     if (metaOnly) {
         resources = resources.filter(resource => resource.isMetadata);
@@ -49,7 +49,7 @@ export async function deletePressReleaseFromGraph(pressReleaseURI, GraphURI, met
         const properties = await getProperties(pressReleaseURI, resourceConfig);
         if (properties.length) {
             const statements = toStatements(properties);
-            const insertQuery = toDeleteQuery(statements, GraphURI);
+            const insertQuery = toDeleteQuery(statements, graphURI);
             await updateSudo(insertQuery);
         }
     }
