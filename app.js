@@ -14,6 +14,10 @@ import {
     isTokenClaimAssignedToUser,
 } from './sparql-helpers/token-claim.sparql';
 import { COLLABORATOR_GRAPH_PREFIX } from './constants';
+import {
+    approvalActivityByCollaboratorExists,
+    createApprovalActivity,
+} from './sparql-helpers/approval-activity.sparql';
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     try {
@@ -150,6 +154,33 @@ app.put('/collaboration-activities/:id', async (req, res, next) => {
         console.info(`successfully transferred press-release ${collaborationActivity.pressReleaseUri} to ${collaborators.length} collaborator graphs`);
 
         return res.sendStatus(200);
+    } catch (err) {
+        return handleGenericError(err, next);
+    }
+});
+
+app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
+    try {
+        const collaborationActivityId = req.params.id;
+        const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
+        if (!collaborationActivity) {
+            return res.sendStatus(404);
+        }
+
+        const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
+        const collaborators = await getCollaborators(collaborationActivity.uri);
+        if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
+            return res.sendStatus(403);
+        }
+
+        const exists = approvalActivityByCollaboratorExists(requestedByOrganization.uri);
+        if (exists) {
+            return res.sendStatus(409);
+        }
+
+        await createApprovalActivity(collaborationActivity.uri, requestedByOrganization.uri, collaborators);
+        return res.sendStatus(201);
+
     } catch (err) {
         return handleGenericError(err, next);
     }
