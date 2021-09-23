@@ -2,6 +2,7 @@
   "resources": [
     {
       "type": "fabio:PressRelease",
+      "isMetadata": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -21,6 +22,7 @@
     },
     {
       "type": "nfo:FileDataObject",
+      "isMetadata": false,
       "path": "nie:hasPart / ^nie:dataSource*",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
@@ -36,6 +38,7 @@
     {
       "type": "ebucore:Contact",
       "path": "dct:source",
+      "isMetadata": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -56,6 +59,7 @@
     {
       "type": "vcard:Email",
       "path": "dct:source / vcard:hasEmail",
+      "isMetadata": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -66,6 +70,7 @@
     {
       "type": "vcard:Voice",
       "path": "dct:source / vcard:hasTelephone",
+      "isMetadata": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -76,6 +81,7 @@
     {
       "type": "vcard:Cell",
       "path": "dct:source / ext:hasMobile",
+      "isMetadata": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -85,6 +91,7 @@
     },
     {
       "type": "ext:PressReleaseActivity",
+      "isMetadata": true,
       "path": "^ext:used",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
@@ -98,6 +105,7 @@
     },
     {
       "type": "ext:CollaborationActivity",
+      "isMetadata": false,
       "path": "^prov:used",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
@@ -111,6 +119,7 @@
     {
       "type": "ext:ApprovalActivity",
       "path": "^prov:used / ^prov:wasInfomedBy",
+      "isMetadata": true,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -121,6 +130,7 @@
     },
     {
       "type": "ext:TokenClaim",
+      "isMetadata": false,
       "path": "^prov:used / ^prov:generated",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",

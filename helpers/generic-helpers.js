@@ -47,6 +47,17 @@ export function toInsertQuery(statementsString, graph) {
     `;
 }
 
+export function toDeleteQuery(statementsString, graph) {
+    return `
+    ${PREFIXES}
+    DELETE DATA {
+        GRAPH ${sparqlEscapeUri(graph)}{
+           ${statementsString}
+        }
+    }
+    `;
+}
+
 export function escape(rdfTerm) {
     const { type, value, datatype, 'xml:lang': lang } = rdfTerm;
     if (type === 'uri') {

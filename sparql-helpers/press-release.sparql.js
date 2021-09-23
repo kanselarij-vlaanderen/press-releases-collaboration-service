@@ -5,7 +5,7 @@ import {
     toInsertQuery,
     toStatements,
     isInverse,
-    normalizePredicate,
+    normalizePredicate, toDeleteQuery,
 } from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
 import RESOURCE_CONFIG from '../config.json';
@@ -24,12 +24,32 @@ export async function getPressReleaseCreator(pressReleaseURI) {
     return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
-export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGraphURI) {
-    for (const resourceConfig of RESOURCE_CONFIG.resources) {
+export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGraphURI, metaOnly) {
+    let resources = RESOURCE_CONFIG.resources;
+    if (metaOnly) {
+        resources = resources.filter(resource => resource.isMetadata);
+    }
+
+    for (const resourceConfig of resources) {
         const properties = await getProperties(pressReleaseURI, resourceConfig);
         if (properties.length) {
             const statements = toStatements(properties);
             const insertQuery = toInsertQuery(statements, tempGraphURI);
+            await updateSudo(insertQuery);
+        }
+    }
+}
+
+export async function deletePressReleaseFromGraph(pressReleaseURI, graphURI, metaOnly) {
+    let resources = RESOURCE_CONFIG.resources;
+    if (metaOnly) {
+        resources = resources.filter(resource => resource.isMetadata);
+    }
+    for (const resourceConfig of resources) {
+        const properties = await getProperties(pressReleaseURI, resourceConfig);
+        if (properties.length) {
+            const statements = toStatements(properties);
+            const insertQuery = toDeleteQuery(statements, graphURI);
             await updateSudo(insertQuery);
         }
     }
