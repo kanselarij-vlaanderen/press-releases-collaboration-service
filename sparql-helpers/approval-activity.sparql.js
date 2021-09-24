@@ -5,7 +5,7 @@ import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 export async function approvalActivityByCollaboratorExists(collaboratorUri) {
     return (await query(`
     ${PREFIXES}
-    ASK  { 
+    ASK WHERE { 
         ?x      a                           ext:ApprovalActivity;
                 prov:wasAssociatedWith      ${sparqlEscapeUri(collaboratorUri)}.
     }
