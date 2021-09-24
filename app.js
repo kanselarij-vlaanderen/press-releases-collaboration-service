@@ -173,7 +173,7 @@ app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
             return res.sendStatus(403);
         }
 
-        const exists = await approvalActivityByCollaboratorExists(collaborationActivityId, requestedByOrganization.uri);
+        const exists = await approvalActivityByCollaboratorExists(requestedByOrganization.uri, collaborationActivity.uri);
         if (exists) {
             return res.sendStatus(409);
         }

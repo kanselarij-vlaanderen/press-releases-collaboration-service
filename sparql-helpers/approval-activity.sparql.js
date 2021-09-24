@@ -2,12 +2,12 @@ import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid 
 import { updateSudo } from '@lblod/mu-auth-sudo';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 
-export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityId) {
+export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityUri) {
     return(await query(`
     ${PREFIXES}
     ASK WHERE { 
         ?x      a                           ext:ApprovalActivity;
-                prov:wasInformedBy          ${sparqlEscapeUri(collaborationActivityId)};
+                prov:wasInformedBy          ${sparqlEscapeUri(collaborationActivityUri)};
                 prov:wasAssociatedWith      ${sparqlEscapeUri(collaboratorUri)}.
     }
     `)).boolean;
@@ -30,9 +30,8 @@ export async function createApprovalActivity(collaborationActivityUri, collabora
                   ${subject}        a                           ext:ApprovalActivity;
                                     mu:uuid                     ${sparqlEscapeString(id)};
                                     prov:wasAssociatedWith      ${sparqlEscapeUri(collaboratorUri)};
+                                    prov:wasInformedBy          ${sparqlEscapeUri(collaborationActivityUri)};
                                     prov:startedAtTime          ${now}.
-                                    
-                ${sparqlEscapeUri(collaborationActivityUri)} prov:wasInformedBy ${subject}.
                }
             }
         `);
