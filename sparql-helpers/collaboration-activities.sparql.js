@@ -6,12 +6,14 @@ export async function getCollaborationActivityById(id) {
     const queryResult = await query(`
     ${PREFIXES}
     
-    SELECT ?uri ?pressReleaseUri ?tokenClaimUri
+    SELECT ?uri ?pressReleaseUri ?tokenClaimUri ?approvalActivityUri
     WHERE {
         ?uri                        a                   ext:CollaborationActivity;
                                     mu:uuid             ${sparqlEscapeString(id)};
                                     prov:used           ?pressReleaseUri.
         OPTIONAL { ?uri             prov:generated      ?tokenClaimUri }
+        
+        OPTIONAL { ?approvalActivityUri     prov:wasInformedBy      ?uri  }
     }
     LIMIT 1
     `);

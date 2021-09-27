@@ -38,3 +38,26 @@ export async function createApprovalActivity(collaborationActivityUri, collabora
     }
 
 }
+
+export async function deleteApprovalActivityFromCollaboratorGraphs(uri, collaborators){
+        await updateSudo(`
+            ${PREFIXES}
+            DELETE {
+               GRAPH ?graph{
+                  ${uri}            a                           ext:ApprovalActivity;
+                                    mu:uuid                     ?id;
+                                    prov:wasAssociatedWith      ?collaborator;
+                                    prov:wasInformedBy          ?collaborationActivity;
+                                    prov:startedAtTime          ?date.
+               }
+            } WHERE {
+                GRAPH ?graph {
+                      ${uri}            a                           ext:ApprovalActivity;
+                                        mu:uuid                     ?id;
+                                        prov:wasAssociatedWith      ?collaborator;
+                                        prov:wasInformedBy          ?collaborationActivity;
+                                        prov:startedAtTime          ?date.
+                }
+            }
+        `);
+}
