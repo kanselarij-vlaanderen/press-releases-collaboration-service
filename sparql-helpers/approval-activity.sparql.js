@@ -3,7 +3,7 @@ import { updateSudo } from '@lblod/mu-auth-sudo';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 
 export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityUri) {
-    return(await query(`
+    return (await query(`
     ${PREFIXES}
     ASK WHERE { 
         ?x      a                           ext:ApprovalActivity;
@@ -39,24 +39,29 @@ export async function createApprovalActivity(collaborationActivityUri, collabora
 
 }
 
-export async function deleteApprovalActivityFromCollaboratorGraphs(uri, collaborators){
-        await updateSudo(`
+export async function getApprovalsByCollaboration(collaborationUri) {
+    console.log(collaborationUri);
+    return (await query(`
+    ${PREFIXES}
+    SELECT ?uri WHERE {
+       ?uri     prov:wasInformedBy      ${sparqlEscapeUri(collaborationUri)}.
+    }
+    `)).results.bindings;
+}
+
+export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
+    await updateSudo(`
             ${PREFIXES}
             DELETE {
                GRAPH ?graph{
-                  ${uri}            a                           ext:ApprovalActivity;
-                                    mu:uuid                     ?id;
-                                    prov:wasAssociatedWith      ?collaborator;
-                                    prov:wasInformedBy          ?collaborationActivity;
-                                    prov:startedAtTime          ?date.
+                     ?s             ?p                          ?o;
+                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
                }
             } WHERE {
                 GRAPH ?graph {
-                      ${uri}            a                           ext:ApprovalActivity;
-                                        mu:uuid                     ?id;
-                                        prov:wasAssociatedWith      ?collaborator;
-                                        prov:wasInformedBy          ?collaborationActivity;
-                                        prov:startedAtTime          ?date.
+                      ?s                ?p                          ?o;
+                                        prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+                                   
                 }
             }
         `);

@@ -22,3 +22,7 @@ export const PREFIXES = `
     PREFIX adms: ${sparqlEscapeUri('http://www.w3.org/ns/adms#')}
     PREFIX org: ${sparqlEscapeUri('http://www.w3.org/ns/org#')}
 `;
+
+
+
+

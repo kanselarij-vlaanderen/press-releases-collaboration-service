@@ -16,7 +16,7 @@ import {
 import { COLLABORATOR_GRAPH_PREFIX } from './constants';
 import {
     approvalActivityByCollaboratorExists,
-    createApprovalActivity, deleteApprovalActivityFromCollaboratorGraphs,
+    createApprovalActivity, deleteApprovalActivityFromCollaboratorGraphs, getApprovalsByCollaboration,
 } from './sparql-helpers/approval-activity.sparql';
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
@@ -189,6 +189,7 @@ app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
 app.delete('/collaboration-activities/:id/approvals', async (req, res, next) => {
     try {
         const collaborationActivityId = req.params.id;
+
         const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
         if (!collaborationActivity) {
             return res.status(404).send('Collaboration activity not found');
@@ -200,11 +201,12 @@ app.delete('/collaboration-activities/:id/approvals', async (req, res, next) => 
             return res.sendStatus(403);
         }
 
-        if (!collaborationActivity.approvalActivityUri) {
+        const approvalActivities = await getApprovalsByCollaboration(collaborationActivity.uri);
+        if (!approvalActivities?.length) {
             return res.status(409).send('No approval activity linked to the collaboration-activity');
         }
 
-        await deleteApprovalActivityFromCollaboratorGraphs(collaborationActivity.approvalActivityUri, collaborators);
+        await deleteApprovalActivityFromCollaboratorGraphs(collaborationActivity.uri);
         return res.sendStatus(204);
 
     } catch (err) {
