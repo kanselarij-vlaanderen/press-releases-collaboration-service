@@ -40,7 +40,6 @@ export async function createApprovalActivity(collaborationActivityUri, collabora
 }
 
 export async function getApprovalsByCollaboration(collaborationUri) {
-    console.log(collaborationUri);
     return (await query(`
     ${PREFIXES}
     SELECT ?uri WHERE {
@@ -54,13 +53,35 @@ export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
             ${PREFIXES}
             DELETE {
                GRAPH ?graph{
-                     ?s             ?p                          ?o;
+                     ?s             a                           ext:ApprovalActivity;
+                                    ?p                          ?o;
                                     prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
                }
             } WHERE {
                 GRAPH ?graph {
-                      ?s                ?p                          ?o;
+                      ?s                a                           ext:ApprovalActivity;
+                                        ?p                          ?o;
                                         prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+                                   
+                }
+            }
+        `);
+}
+
+export async function deleteApprovalActivitiesFromGraph(uri, graph) {
+    await updateSudo(`
+            ${PREFIXES}
+            DELETE {
+               GRAPH ${sparqlEscapeUri(graph)}{
+                     ?s             a                           ext:ApprovalActivity;
+                                    ?p                          ?o;
+                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+               }
+            } WHERE {
+                GRAPH ${sparqlEscapeUri(graph)} {
+                       ?s            a                           ext:ApprovalActivity;
+                                     ?p                          ?o;
+                                     prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
                                    
                 }
             }

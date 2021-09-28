@@ -1,5 +1,9 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
-import { getCollaborationActivityById, getCollaborators } from './sparql-helpers/collaboration-activities.sparql';
+import {
+    deleteCollaborationActivityFromGraph,
+    getCollaborationActivityById,
+    getCollaborators,
+} from './sparql-helpers/collaboration-activities.sparql';
 import {
     copyPressReleaseToTemporaryGraph,
     deletePressReleaseFromGraph,
@@ -16,8 +20,84 @@ import {
 import { COLLABORATOR_GRAPH_PREFIX } from './constants';
 import {
     approvalActivityByCollaboratorExists,
-    createApprovalActivity, deleteApprovalActivityFromCollaboratorGraphs, getApprovalsByCollaboration,
+    createApprovalActivity,
+    deleteApprovalActivityFromCollaboratorGraphs,
+    deleteApprovalActivitiesFromGraph,
+    getApprovalsByCollaboration,
 } from './sparql-helpers/approval-activity.sparql';
+
+app.put('/collaboration-activities/:id', async (req, res, next) => {
+    try {
+        const collaborationActivityId = req.params.id;
+        const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
+        if (!collaborationActivity) {
+            return res.sendStatus(404);
+        }
+
+        const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
+        const collaborators = await getCollaborators(collaborationActivity.uri);
+        if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
+            return res.sendStatus(403);
+        }
+
+        const claimingUser = await getUserFromHeaders(req.headers);
+        const tokenClaimed = !collaborationActivity.tokenClaimUri ? false : await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
+
+        const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
+        console.info(`Creating copy of press-release ${tokenClaimed ? '' : 'metadata'} ${collaborationActivity.pressReleaseUri} to temporary graph ${tempGraph}`);
+        await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseUri, tempGraph, !tokenClaimed);
+
+        for (const collaborator of collaborators) {
+            const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
+            console.info(`Deleting old data from collaborator graph ( ${target} )`);
+            await deletePressReleaseFromGraph(collaborationActivity.pressReleaseUri, target, !tokenClaimed);
+            console.info(`Copying data from temporary graph to collaborator graph ( ${target} )`);
+            await moveGraph(tempGraph, target);
+        }
+
+        console.info(`Removing temporary graph ( ${tempGraph} )`);
+        await removeGraph(tempGraph);
+        console.info(`successfully transferred press-release ${collaborationActivity.pressReleaseUri} to ${collaborators.length} collaborator graphs`);
+
+        return res.sendStatus(200);
+    } catch (err) {
+        return handleGenericError(err, next);
+    }
+});
+
+app.delete('/collaboration-activities/:id', async (req, res, next) => {
+    try {
+        const collaborationActivityId = req.params.id;
+        const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
+        if (!collaborationActivity) {
+            return res.sendStatus(404);
+        }
+
+        // Check if executing user is creator
+        const pressReleaseCreator = await getPressReleaseCreator(collaborationActivity.pressReleaseUri);
+        const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
+        if (pressReleaseCreator.uri !== requestedByOrganization.uri) {
+            return res.sendStatus(403);
+        }
+
+        // Delete press-release from (slave) collaborator graphs
+        const slaveCollaborators = await getCollaborators(collaborationActivity.uri).filter(collaborator => collaborator.uri !== pressReleaseCreator.uri);
+        for (const collaborator of slaveCollaborators) {
+            const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
+            console.info(`Deleting press release and relations from collaborator organization graph ( ${target} )`);
+            await deletePressReleaseFromGraph(collaborationActivity.pressReleaseUri, target, false);
+        }
+
+        // Delete collaboration-activity and approval-activity from (master) creator graph
+        const masterGraph = `${COLLABORATOR_GRAPH_PREFIX}${pressReleaseCreator.id}`;
+        await deleteApprovalActivitiesFromGraph(collaborationActivity.uri, masterGraph);
+        await deleteCollaborationActivityFromGraph(collaborationActivity.uri, masterGraph);
+
+        return res.sendStatus(200);
+    } catch (err) {
+        return handleGenericError(err, next);
+    }
+});
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     try {
@@ -115,45 +195,6 @@ app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
         }
         await deleteTokenClaims(collaborationActivity.tokenClaimUri, collaborationActivity.uri);
         return res.sendStatus(204);
-    } catch (err) {
-        return handleGenericError(err, next);
-    }
-});
-
-app.put('/collaboration-activities/:id', async (req, res, next) => {
-    try {
-        const collaborationActivityId = req.params.id;
-        const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-        if (!collaborationActivity) {
-            return res.sendStatus(404);
-        }
-
-        const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-        const collaborators = await getCollaborators(collaborationActivity.uri);
-        if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
-            return res.sendStatus(403);
-        }
-
-        const claimingUser = await getUserFromHeaders(req.headers);
-        const tokenClaimed = !collaborationActivity.tokenClaimUri ? false : await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
-
-        const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
-        console.info(`Creating copy of press-release ${tokenClaimed ? '' : 'metadata'} ${collaborationActivity.pressReleaseUri} to temporary graph ${tempGraph}`);
-        await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseUri, tempGraph, !tokenClaimed);
-
-        for (const collaborator of collaborators) {
-            const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
-            console.info(`Deleting old data from collaborator graph ( ${target} )`);
-            await deletePressReleaseFromGraph(collaborationActivity.pressReleaseUri, target, !tokenClaimed);
-            console.info(`Copying data from temporary graph to collaborator graph ( ${target} )`);
-            await moveGraph(tempGraph, target);
-        }
-
-        console.info(`Removing temporary graph ( ${tempGraph} )`);
-        await removeGraph(tempGraph);
-        console.info(`successfully transferred press-release ${collaborationActivity.pressReleaseUri} to ${collaborators.length} collaborator graphs`);
-
-        return res.sendStatus(200);
     } catch (err) {
         return handleGenericError(err, next);
     }
