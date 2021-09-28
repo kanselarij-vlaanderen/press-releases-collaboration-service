@@ -135,7 +135,7 @@ app.put('/collaboration-activities/:id', async (req, res, next) => {
         }
 
         const claimingUser = await getUserFromHeaders(req.headers);
-        const tokenClaimed = await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
+        const tokenClaimed = !collaborationActivity.tokenClaimUri ? false : await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
 
         const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
         console.info(`Creating copy of press-release ${tokenClaimed ? '' : 'metadata'} ${collaborationActivity.pressReleaseUri} to temporary graph ${tempGraph}`);
