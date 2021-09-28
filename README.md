@@ -117,6 +117,28 @@ In the ```config.json``` it is possible to make the distinction between meta-fie
 | 403 | Forbidden: if the request is executed by a user that is not part of the collaborators linked to the press-release (derrived from the session-uri in the request headers)|
 
 
+# POST /collaboration-activities/:id/approvals
+This endpoint creates an approval activity in every graph for the collaborators linked to the collaboration-activity
+
+### Responses
+| status | description |
+|-------|-------------|
+| 200 | Ok |
+| 404 | Not Found: no collaboration-activity found with the provided id |
+| 403 | Forbidden: if the request is executed by a user that is not part of the collaborators |
+| 409 | Conflict: if the approval-activity already exists |
+
+# DELETE /collaboration-activities/:id/approvals
+This endpoint creates an approval activity in every graph for the collaborators linked to the collaboration-activity
+
+### Responses
+| status | description |
+|-------|-------------|
+| 204 | No Content: successfully deleted approval-activity |
+| 404 | Not Found: no collaboration-activity found with the provided id |
+| 403 | Forbidden: if the request is executed by a user that is not part of the collaborators |
+| 409 | Conflict: if there is no approval-activity linked to the collaboration activity |
+
 # Environment
 | Key | type | default | description |
 |-----|------|---------|-------------|

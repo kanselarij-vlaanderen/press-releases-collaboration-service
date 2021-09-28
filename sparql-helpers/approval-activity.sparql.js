@@ -3,7 +3,7 @@ import { updateSudo } from '@lblod/mu-auth-sudo';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 
 export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityUri) {
-    return(await query(`
+    return (await query(`
     ${PREFIXES}
     ASK WHERE { 
         ?x      a                           ext:ApprovalActivity;
@@ -37,4 +37,32 @@ export async function createApprovalActivity(collaborationActivityUri, collabora
         `);
     }
 
+}
+
+export async function getApprovalsByCollaboration(collaborationUri) {
+    console.log(collaborationUri);
+    return (await query(`
+    ${PREFIXES}
+    SELECT ?uri WHERE {
+       ?uri     prov:wasInformedBy      ${sparqlEscapeUri(collaborationUri)}.
+    }
+    `)).results.bindings;
+}
+
+export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
+    await updateSudo(`
+            ${PREFIXES}
+            DELETE {
+               GRAPH ?graph{
+                     ?s             ?p                          ?o;
+                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+               }
+            } WHERE {
+                GRAPH ?graph {
+                      ?s                ?p                          ?o;
+                                        prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+                                   
+                }
+            }
+        `);
 }
