@@ -1,5 +1,7 @@
 import { sparqlEscapeUri, sparqlEscapeString } from 'mu';
-import { PREFIXES } from '../constants';
+import { EDIT_TOKEN_MAX_AGE, EDIT_TOKEN_MAX_AGE_UNIT, PREFIXES } from '../constants';
+import * as moment from 'moment';
+import { deleteTokenClaims, getTokenClaimAges } from '../sparql-helpers/token-claim.sparql';
 
 export function handleGenericError(e, next) {
     console.error(e);
@@ -76,4 +78,22 @@ export function escape(rdfTerm) {
     } else
         console.log(`Don't know how to escape type ${type}. Will escape as a string.`);
     return sparqlEscapeString(value);
+}
+
+
+export async function cronJobHandler() {
+    console.info('Checking token-claims for expiration');
+
+    const tokenClaims = await getTokenClaimAges();
+    const toDelete = tokenClaims.filter((tokenClaim) => {
+        const maxAge = tokenClaim.modified.subtract(EDIT_TOKEN_MAX_AGE, EDIT_TOKEN_MAX_AGE_UNIT);
+        return maxAge.diff(tokenClaim.created) < 0
+    });
+
+    console.info(`Found ${toDelete.length} expired token-claims`);
+
+    for (const tokenClaim of toDelete) {
+        console.info(`Deleting ${tokenClaim.uri} from ${tokenClaim.graph}`);
+        await deleteTokenClaims(tokenClaim.uri, tokenClaim.collaborationActivityUri, tokenClaim.graph);
+    }
 }

@@ -5,7 +5,7 @@ import {
     deletePressReleaseFromGraph,
     getPressReleaseCreator,
 } from './sparql-helpers/press-release.sparql';
-import { handleGenericError } from './helpers/generic-helpers';
+import { cronJobHandler, handleGenericError } from './helpers/generic-helpers';
 import { getOrganizationFromHeaders, getUserFromHeaders } from './sparql-helpers/session.sparql';
 import { moveGraph, removeGraph } from './helpers/graph-helpers';
 import {
@@ -13,11 +13,13 @@ import {
     deleteTokenClaims,
     isTokenClaimAssignedToUser,
 } from './sparql-helpers/token-claim.sparql';
-import { COLLABORATOR_GRAPH_PREFIX } from './constants';
+import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
 import {
     approvalActivityByCollaboratorExists,
     createApprovalActivity, deleteApprovalActivityFromCollaboratorGraphs, getApprovalsByCollaboration,
 } from './sparql-helpers/approval-activity.sparql';
+import { CronJob } from 'cron';
+new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
     try {
