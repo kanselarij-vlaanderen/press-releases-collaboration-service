@@ -1,5 +1,5 @@
 import { sparqlEscapeUri, query } from 'mu';
-import { updateSudo } from '@lblod/mu-auth-sudo';
+import { querySudo, updateSudo } from '@lblod/mu-auth-sudo';
 import {
     mapBindingValue,
     toInsertQuery,
@@ -46,7 +46,7 @@ export async function deletePressReleaseFromGraph(pressReleaseURI, graphURI, met
         resources = resources.filter(resource => resource.isMetadata);
     }
     for (const resourceConfig of resources) {
-        const properties = await getProperties(pressReleaseURI, resourceConfig);
+        const properties = await getProperties(pressReleaseURI, resourceConfig, graphURI);
         if (properties.length) {
             const statements = toStatements(properties);
             const insertQuery = toDeleteQuery(statements, graphURI);
@@ -55,7 +55,7 @@ export async function deletePressReleaseFromGraph(pressReleaseURI, graphURI, met
     }
 }
 
-async function getProperties(pressReleaseURI, resourceConfig) {
+async function getProperties(pressReleaseURI, resourceConfig, graph) {
     let properties = [];
 
     // Direct properties
@@ -69,16 +69,19 @@ async function getProperties(pressReleaseURI, resourceConfig) {
         }
         const values = directProperties.map((i) => sparqlEscapeUri(i)).join('\n');
 
-        const result = await query(`
+        const authorizedQuery = graph ? querySudo : query;
+        const result = await authorizedQuery(`
             ${PREFIXES}
             SELECT ?subject ?predicate ?object
             WHERE {
-                ${sparqlEscapeUri(pressReleaseURI)}     a                       fabio:PressRelease.
-                ${pathToPressRelease}
-                ?subject ?predicate ?object .
-                VALUES ?predicate {
-                   ${values}
-                }
+                ${graph ? `GRAPH ${sparqlEscapeUri(graph)} {` : ''}
+                    ${sparqlEscapeUri(pressReleaseURI)} a fabio:PressRelease.
+                    ${pathToPressRelease}
+                    ?subject ?predicate ?object .
+                    VALUES ?predicate {
+                       ${values}
+                    }
+                ${graph ? `}` : ''}
            }`);
         properties = properties.concat(result.results.bindings);
     }
@@ -97,16 +100,19 @@ async function getProperties(pressReleaseURI, resourceConfig) {
             return sparqlEscapeUri(predicate);
         }).join('\n');
 
-        const result = await query(`
+        const authorizedQuery = graph ? querySudo : query;
+        const result = await authorizedQuery(`
             ${PREFIXES}
             SELECT ?subject ?predicate ?object
             WHERE {
-                ${sparqlEscapeUri(pressReleaseURI)}     a                       fabio:PressRelease.
-                ${pathToPressRelease}
-                ?subject ?predicate ?object .
-                VALUES ?predicate {
-                   ${values}
-                }
+                ${graph ? `GRAPH ${sparqlEscapeUri(graph)} {` : ''}
+                    ${sparqlEscapeUri(pressReleaseURI)} a fabio:PressRelease.
+                    ${pathToPressRelease}
+                    ?subject ?predicate ?object .
+                    VALUES ?predicate {
+                       ${values}
+                    }
+                ${graph ? `}` : ''}
            }`);
         properties = properties.concat(result.results.bindings);
     }

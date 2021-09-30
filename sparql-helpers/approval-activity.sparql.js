@@ -5,7 +5,7 @@ import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityUri) {
     return (await query(`
     ${PREFIXES}
-    ASK WHERE { 
+    ASK WHERE {
         ?x      a                           ext:ApprovalActivity;
                 prov:wasInformedBy          ${sparqlEscapeUri(collaborationActivityUri)};
                 prov:wasAssociatedWith      ${sparqlEscapeUri(collaboratorUri)}.
@@ -62,7 +62,7 @@ export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
                       ?s                a                           ext:ApprovalActivity;
                                         ?p                          ?o;
                                         prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
-                                   
+
                 }
             }
         `);
