@@ -54,14 +54,14 @@ export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
             DELETE {
                GRAPH ?graph{
                      ?s             a                           ext:ApprovalActivity;
-                                    ?p                          ?o;
-                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)};
+                                    ?p                          ?o.
                }
             } WHERE {
                 GRAPH ?graph {
                       ?s                a                           ext:ApprovalActivity;
-                                        ?p                          ?o;
-                                        prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
+                                        prov:wasInformedBy          ${sparqlEscapeUri(uri)};
+                                        ?p                          ?o.
 
                 }
             }
@@ -82,7 +82,7 @@ export async function deleteApprovalActivitiesFromGraph(uri, graph) {
                        ?s            a                           ext:ApprovalActivity;
                                      ?p                          ?o;
                                      prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
-                                   
+
                 }
             }
         `);
