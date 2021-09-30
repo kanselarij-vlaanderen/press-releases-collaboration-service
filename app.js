@@ -16,7 +16,8 @@ import {
 import { COLLABORATOR_GRAPH_PREFIX } from './constants';
 import {
     approvalActivityByCollaboratorExists,
-    createApprovalActivity, deleteApprovalActivityFromCollaboratorGraphs, getApprovalsByCollaboration,
+    createApprovalActivity,
+    deleteApprovalActivityFromCollaboratorGraphs,
 } from './sparql-helpers/approval-activity.sparql';
 
 app.post('/collaboration-activities/:id/share', async (req, res, next) => {
@@ -199,11 +200,6 @@ app.delete('/collaboration-activities/:id/approvals', async (req, res, next) => 
         const collaborators = await getCollaborators(collaborationActivity.uri);
         if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
             return res.sendStatus(403);
-        }
-
-        const approvalActivities = await getApprovalsByCollaboration(collaborationActivity.uri);
-        if (!approvalActivities?.length) {
-            return res.status(409).send('No approval activity linked to the collaboration-activity');
         }
 
         await deleteApprovalActivityFromCollaboratorGraphs(collaborationActivity.uri);
