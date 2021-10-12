@@ -1,6 +1,7 @@
 import { sparqlEscapeString, sparqlEscapeUri, query } from 'mu';
 import { mapBindingValue } from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
+import { updateSudo } from '@lblod/mu-auth-sudo';
 
 export async function getCollaborationActivityById(id) {
     const queryResult = await query(`
@@ -31,4 +32,23 @@ export async function getCollaborators(collaborationActivityURI) {
     }
     `);
     return queryResult.results.bindings.map(mapBindingValue);
+}
+
+export async function deleteCollaborationActivityFromGraph(uri, graph) {
+    return await updateSudo(`
+    ${PREFIXES}
+    
+    DELETE {
+       GRAPH ${sparqlEscapeUri(graph)}{
+            ${sparqlEscapeUri(uri)}    a                           ext:CollaborationActivity;
+                                       ?p                          ?o.
+        }
+    }
+    WHERE {
+       GRAPH ${sparqlEscapeUri(graph)}{
+            ${sparqlEscapeUri(uri)}    a                           ext:CollaborationActivity;
+                                       ?p                          ?o.
+        }
+    }
+    `);
 }

@@ -134,6 +134,17 @@ This endpoint creates an approval activity in every graph for the collaborators 
 ### Responses
 | status | description |
 |-------|-------------|
+| 200 | No Content: successfully terminated collaboration |
+| 404 | Not Found: no collaboration-activity found with the provided id |
+| 403 | Forbidden: if the request is executed by a user that is not part of the creator organization |
+
+# DELETE /collaboration-activities/:id/approvals
+This endpoints terminates the collaboration on a press-release. It removes tthe related press-release and it's 
+properties/relations from the (non-creator) collaborator graphs and deletes the collaboration-activity and approval-activities from the master/creator graph.
+
+### Responses
+| status | description |
+|-------|-------------|
 | 204 | No Content: successfully deleted approval-activity |
 | 404 | Not Found: no collaboration-activity found with the provided id |
 | 403 | Forbidden: if the request is executed by a user that is not part of the collaborators |
