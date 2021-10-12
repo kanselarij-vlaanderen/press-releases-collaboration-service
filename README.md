@@ -142,8 +142,11 @@ This endpoint creates an approval activity in every graph for the collaborators 
 # Environment
 | Key | type | default | description |
 |-----|------|---------|-------------|
-| UPDATE_BATCH_SIZE | number | 10 | batch size for moving items between graphs |
-| SELECT_BATCH_SIZE | number | 1000 | batch size selectiing items from graphs |
+| UPDATE_BATCH_SIZE | string | '10' | batch size for moving items between graphs |
+| SELECT_BATCH_SIZE | string | '1000' | batch size selectiing items from graphs |
 | COLLABORATOR_GRAPH_PREFIX | string | 'http://mu.semte.ch/graphs/organizations/' | the prefix to be used for the target graph where the collaborator data will be copied. the collaborator id will be added to the end. |
+| CRON_FREQUENCY_PATTERN | string | '' | the prefix to be used for the target graph where the collaborator data will be copied. the collaborator id will be added to the end. |
+| EDIT_TOKEN_MAX_AGE | string | '' | the value |
+| EDIT_TOKEN_MAX_AGE_UNIT | string | 'minutes' | time unit for max age, check [momentjs docs]: https://momentjs.com/docs/#/durations/as/  for more info|
 
 

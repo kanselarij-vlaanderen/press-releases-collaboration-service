@@ -1,6 +1,7 @@
 import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid as generateUuid } from 'mu';
-import { updateSudo } from '@lblod/mu-auth-sudo';
+import { querySudo, updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from '../constants';
+import * as moment from 'moment';
 
 export async function createTokenClaims(userURI, collaborationActivityURI) {
     const id = generateUuid();
@@ -26,16 +27,18 @@ export async function createTokenClaims(userURI, collaborationActivityURI) {
     `);
 }
 
-export async function deleteTokenClaims(tokenClaimURI, collaborationActivityURI) {
+export async function deleteTokenClaims(tokenClaimURI, collaborationActivityURI, graph) {
+    graph = graph ? sparqlEscapeUri(graph) : '?graph';
+
     return await updateSudo(`
     ${PREFIXES}
     DELETE {
-      GRAPH ?graph {
+      GRAPH ${graph} {
           ${sparqlEscapeUri(tokenClaimURI)}               ?p                      ?o.
           ${sparqlEscapeUri(collaborationActivityURI)}    prov:generated          ${sparqlEscapeUri(tokenClaimURI)}.
       }
     } WHERE {
-      GRAPH ?graph {
+      GRAPH ${graph} {
             ${sparqlEscapeUri(tokenClaimURI)}               ?p                      ?o.
             ${sparqlEscapeUri(collaborationActivityURI)}    prov:generated          ${sparqlEscapeUri(tokenClaimURI)}.
       }
@@ -52,4 +55,24 @@ export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
   }
   `));
     return q.boolean;
+}
+
+export async function getTokenClaimAges() {
+    const q = (await querySudo(`
+    ${PREFIXES}
+    SELECT ?uri ?created ?modified ?graph ?collaborationActivityUri
+    WHERE {
+        GRAPH ?graph {
+            ?uri                        a               ext:TokenClaim;
+                                        dct:created     ?created;
+                                        dct:modified     ?modified.
+           ?collaborationActivityUri    prov:generated  ?uri.
+        }
+    }
+    `));
+    return q.results.bindings.map((tokenClaim) => {
+        tokenClaim.modified = moment(tokenClaim.modified);
+        tokenClaim.created = moment(tokenClaim.created);
+        return tokenClaim;
+    });
 }
