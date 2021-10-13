@@ -1,10 +1,10 @@
 import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid as generateUuid } from 'mu';
 import { querySudo, updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from '../constants';
-import * as moment from 'moment';
+import moment from 'moment';
 
 export async function createTokenClaims(userURI, collaborationActivityURI) {
-    const id = generateUuid();
+  const id = generateUuid();
     const uri = 'http://themis.vlaanderen.be/id/tokenclaim/' + id;
     const createdDate = new Date();
 
@@ -21,29 +21,29 @@ export async function createTokenClaims(userURI, collaborationActivityURI) {
     } WHERE {
         GRAPH ?graph {
             ${sparqlEscapeUri(collaborationActivityURI)}    a                       ext:CollaborationActivity.
-            
+
         }
     }
     `);
 }
 
 export async function deleteTokenClaims(tokenClaimURI, collaborationActivityURI, graph) {
-    graph = graph ? sparqlEscapeUri(graph) : '?graph';
+  graph = graph ? sparqlEscapeUri(graph) : '?graph';
 
-    return await updateSudo(`
+  return await updateSudo(`
     ${PREFIXES}
     DELETE {
       GRAPH ${graph} {
-          ${sparqlEscapeUri(tokenClaimURI)}               ?p                      ?o.
-          ${sparqlEscapeUri(collaborationActivityURI)}    prov:generated          ${sparqlEscapeUri(tokenClaimURI)}.
+        ${sparqlEscapeUri(tokenClaimURI)} ?p ?o.
+        ${sparqlEscapeUri(collaborationActivityURI)} prov:generated ${sparqlEscapeUri(tokenClaimURI)}.
       }
     } WHERE {
       GRAPH ${graph} {
-            ${sparqlEscapeUri(tokenClaimURI)}               ?p                      ?o.
-            ${sparqlEscapeUri(collaborationActivityURI)}    prov:generated          ${sparqlEscapeUri(tokenClaimURI)}.
+        ${sparqlEscapeUri(tokenClaimURI)} ?p ?o.
+        ${sparqlEscapeUri(collaborationActivityURI)} prov:generated ${sparqlEscapeUri(tokenClaimURI)}.
       }
     }
-    `);
+  `);
 }
 
 export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
@@ -58,21 +58,24 @@ export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
 }
 
 export async function getTokenClaimAges() {
-    const q = (await querySudo(`
-    ${PREFIXES}
-    SELECT ?uri ?created ?modified ?graph ?collaborationActivityUri
+	const q = (await querySudo(`
+  	${PREFIXES}
+    SELECT ?uri ?created ?graph ?collaborationActivityUri
     WHERE {
-        GRAPH ?graph {
-            ?uri                        a               ext:TokenClaim;
-                                        dct:created     ?created;
-                                        dct:modified     ?modified.
-           ?collaborationActivityUri    prov:generated  ?uri.
-        }
+      GRAPH ?graph {
+        ?uri a ext:TokenClaim;
+          dct:created ?created.
+        ?collaborationActivityUri prov:generated ?uri.
+      }
     }
-    `));
-    return q.results.bindings.map((tokenClaim) => {
-        tokenClaim.modified = moment(tokenClaim.modified);
-        tokenClaim.created = moment(tokenClaim.created);
-        return tokenClaim;
-    });
+  `));
+
+  return q.results.bindings.map((tokenClaim) => {
+    return  {
+      uri: tokenClaim.uri.value,
+      created: moment(tokenClaim.created.value),
+      graph: tokenClaim.graph.value,
+      collaborationActivityUri: tokenClaim.collaborationActivityUri.value
+    }
+  });
 }

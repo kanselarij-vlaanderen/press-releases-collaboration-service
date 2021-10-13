@@ -1,6 +1,5 @@
 import { sparqlEscapeUri, sparqlEscapeString } from 'mu';
 import { EDIT_TOKEN_MAX_AGE, EDIT_TOKEN_MAX_AGE_UNIT, PREFIXES } from '../constants';
-import * as moment from 'moment';
 import { deleteTokenClaims, getTokenClaimAges } from '../sparql-helpers/token-claim.sparql';
 
 export function handleGenericError(e, next) {
@@ -82,18 +81,22 @@ export function escape(rdfTerm) {
 
 
 export async function cronJobHandler() {
-    console.info('Checking token-claims for expiration');
+  console.info('Checking token-claims for expiration...');
 
-    const tokenClaims = await getTokenClaimAges();
-    const toDelete = tokenClaims.filter((tokenClaim) => {
-        const maxAge = tokenClaim.modified.subtract(EDIT_TOKEN_MAX_AGE, EDIT_TOKEN_MAX_AGE_UNIT);
-        return maxAge.diff(tokenClaim.created) < 0
-    });
+  const tokenClaims = await getTokenClaimAges();
+  const toDelete = tokenClaims.filter((tokenClaim) => {
+    const maxAge = tokenClaim.created.add(EDIT_TOKEN_MAX_AGE, EDIT_TOKEN_MAX_AGE_UNIT);
+    return maxAge.diff(new Date()) < 0;
+  });
 
-    console.info(`Found ${toDelete.length} expired token-claims`);
+  console.info(`Found ${toDelete.length} expired token-claims`);
 
-    for (const tokenClaim of toDelete) {
-        console.info(`Deleting ${tokenClaim.uri} from ${tokenClaim.graph}`);
-        await deleteTokenClaims(tokenClaim.uri, tokenClaim.collaborationActivityUri, tokenClaim.graph);
-    }
+  for (const tokenClaim of toDelete) {
+    console.info(`Deleting ${tokenClaim.uri} from ${tokenClaim.graph} expired on ${tokenClaim.created}`);
+    await deleteTokenClaims(tokenClaim.uri, tokenClaim.collaborationActivityUri, tokenClaim.graph);
+  }
+
+  if (toDelete) {
+    console.info(`Deleted ${toDelete.length} expired token-claims`);
+  }
 }
