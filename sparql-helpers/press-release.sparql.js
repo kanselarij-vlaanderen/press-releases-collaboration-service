@@ -51,9 +51,7 @@ export async function copyPressReleaseToGraph(pressReleaseUri, graph, isClaimedB
 }
 
 /**
- * Delete all data for the given press-release from the given graph. The data that needs
- * to be deleted is described in a resource configuration.
- *
+ * Delete all data for the given press-release from the given graph.
  * Depending whether the user currently holds the edit token of the press-release all data
  * or only approvals- and historic-activities are deleted from the graph
 */
@@ -64,7 +62,26 @@ export async function deletePressReleaseFromGraph(pressReleaseUri, graph, isClai
     // will not be removed, since it cannot be changed.
     resources = resources.filter(resource => !resource.isClaimable);
   }
+  await deleteResources(pressReleaseUri, resources, graph);
+}
 
+/**
+ * Delete all collaboration data for the given press-release from the given graph,
+ * but not the press-release itself.
+*/
+export async function deleteCollaborationResourcesFromGraph(pressReleaseUri, graph) {
+  const resources = RESOURCE_CONFIG.resources.filter(type => [
+    'ext:CollaborationActivity',
+    'ext:ApprovalActivity'
+  ].includes(type));
+  await deleteResources(pressReleaseUri, resources, graph);
+}
+
+/**
+ * Delete all data related to the given press-release from the given graph.
+ * The data that needs to be deleted is described in a resource configuration.
+*/
+async function deleteResources(pressReleaseUri, resources, graph) {
   for (const resourceConfig of resources) {
     const properties = await getProperties(pressReleaseUri, resourceConfig, graph);
     if (properties.length) {

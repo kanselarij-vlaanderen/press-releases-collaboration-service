@@ -1,13 +1,12 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
 import {
-  deleteCollaborationActivityFromGraph,
   getCollaborationActivityById,
   getCollaborators,
-  distributeData
+  distributeData,
+  stopDataDistribution
 } from './sparql-helpers/collaboration-activities.sparql';
 import {
   copyPressReleaseToGraph,
-  deletePressReleaseFromGraph,
   getPressReleaseCreator,
 } from './sparql-helpers/press-release.sparql';
 import { cronJobHandler, handleGenericError } from './helpers/generic-helpers';
@@ -22,8 +21,7 @@ import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
 import {
   approvalActivityByCollaboratorExists,
   createApprovalActivity,
-  deleteApprovalActivityFromCollaboratorGraphs,
-  deleteApprovalActivitiesFromGraph,
+  deleteApprovalActivityFromCollaboratorGraphs
 } from './sparql-helpers/approval-activity.sparql';
 import { CronJob } from 'cron';
 new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
@@ -53,7 +51,7 @@ app.put('/collaboration-activities/:id', async (req, res, next) => {
     const organization = await getOrganizationFromHeaders(req.headers);
     if (!organization) {
       console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
-      return res.sendStatus(403);
+      return res.sendStatus(401);
     }
 
     const collaborators = await getCollaborators(collaboration.uri);
@@ -72,33 +70,35 @@ app.put('/collaboration-activities/:id', async (req, res, next) => {
   }
 });
 
+/**
+ * Endpoint to stop sharing a press-release.
+ * I.e. data gets removed from the graphs of all collaborators,
+ * except the master (creator) of the press-release.
+*/
 app.delete('/collaboration-activities/:id', async (req, res, next) => {
   try {
-    const collaborationActivityId = req.params.id;
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
+    const collaborationId = req.params.id;
+    console.info(`Received request to stop collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
+
+    if (!collaboration) {
       return res.sendStatus(404);
     }
 
-    // Check if executing user is creator
-    const pressReleaseCreator = await getPressReleaseCreator(collaborationActivity.pressReleaseUri);
-    const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-    if (pressReleaseCreator.uri !== requestedByOrganization.uri) {
+    const organization = await getOrganizationFromHeaders(req.headers);
+    if (!organization) {
+      console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
+      return res.sendStatus(401);
+    }
+
+    const creator = await getPressReleaseCreator(collaboration.pressReleaseUri);
+    if (creator.uri !== organization.uri) {
+      console.info(`Current logged in user does not belong to the organization that created the press-release. User does not have the permission to stop the co-editing process.`);
       return res.sendStatus(403);
     }
 
-    // Delete press-release from (slave) collaborator graphs
-    const slaveCollaborators = await getCollaborators(collaborationActivity.uri).filter(collaborator => collaborator.uri !== pressReleaseCreator.uri);
-    for (const collaborator of slaveCollaborators) {
-      const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
-      console.info(`Deleting press release and relations from collaborator organization graph ( ${target} )`);
-      await deletePressReleaseFromGraph(collaborationActivity.pressReleaseUri, target, false);
-    }
-
-    // Delete collaboration-activity and approval-activity from (master) creator graph
-    const masterGraph = `${COLLABORATOR_GRAPH_PREFIX}${pressReleaseCreator.id}`;
-    await deleteApprovalActivitiesFromGraph(collaborationActivity.uri, masterGraph);
-    await deleteCollaborationActivityFromGraph(collaborationActivity.uri, masterGraph);
+    const collaborators = await getCollaborators(collaboration.uri);
+    await stopDataDistribution(collaboration, collaborators, creator);
 
     return res.sendStatus(200);
   } catch (err) {

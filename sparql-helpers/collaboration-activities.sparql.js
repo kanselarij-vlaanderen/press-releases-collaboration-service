@@ -3,7 +3,7 @@ import { parseSparqlResult } from '../helpers/generic-helpers';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 import { isTokenClaimAssignedToUser } from './token-claim.sparql';
-import { copyPressReleaseToGraph, deletePressReleaseFromGraph } from './press-release.sparql';
+import { copyPressReleaseToGraph, deletePressReleaseFromGraph, deleteCollaborationResourcesFromGraph } from './press-release.sparql';
 import { moveGraph, removeGraph } from '../helpers/graph-helpers';
 
 export async function getCollaborationActivityById(id) {
@@ -39,25 +39,6 @@ export async function getCollaborators(collaborationActivityUri) {
   return queryResult.results.bindings.map(parseSparqlResult);
 }
 
-export async function deleteCollaborationActivityFromGraph(uri, graph) {
-  return await updateSudo(`
-    ${PREFIXES}
-
-    DELETE {
-       GRAPH ${sparqlEscapeUri(graph)}{
-            ${sparqlEscapeUri(uri)}    a                           ext:CollaborationActivity;
-                                       ?p                          ?o.
-        }
-    }
-    WHERE {
-       GRAPH ${sparqlEscapeUri(graph)}{
-            ${sparqlEscapeUri(uri)}    a                           ext:CollaborationActivity;
-                                       ?p                          ?o.
-        }
-    }
-    `);
-}
-
 export async function distributeData(collaboration, collaborators, user) {
   let tokenClaimed = false;
   if (collaboration.tokenClaimUri) {
@@ -82,4 +63,17 @@ export async function distributeData(collaboration, collaborators, user) {
   console.info(`Cleanup temporary graph <${tempGraph}>`);
   await removeGraph(tempGraph);
   console.info(`Successfully transferred press-release <${collaboration.pressReleaseUri}> to the ${collaborators.length} collaborators of collaboration <${collaboration.uri}>.`);
+}
+
+export async function stopDataDistribution(collaboration, collaborators, creator) {
+  const slaveCollaborators = collaborators.filter(collaborator => collaborator.uri !== creator.uri);
+  for (const collaborator of slaveCollaborators) {
+    const graph = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
+    console.info(`Deleting data from collaborator graph <${graph}>`);
+    await deletePressReleaseFromGraph(collaboration.pressReleaseUri, graph);
+  }
+
+  const masterGraph = `${COLLABORATOR_GRAPH_PREFIX}${creator.id}`;
+  console.info(`Deleting collaboration and approvals from master graph <${masterGraph}>`);
+  await deleteCollaborationResourcesFromGraph(collaboration.pressReleaseUri, masterGraph);
 }
