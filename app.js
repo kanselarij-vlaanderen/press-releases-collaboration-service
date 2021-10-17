@@ -3,6 +3,7 @@ import {
   getCollaborationActivityById,
   getCollaborators,
   distributeData,
+  updateDataDistribution,
   stopDataDistribution
 } from './sparql-helpers/collaboration-activities.sparql';
 import {
@@ -27,7 +28,42 @@ import { CronJob } from 'cron';
 new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
 
 /**
- * Endpoint to initiate/update the shared press-release across all collaborators.
+ * Endpoint to start sharing a press-release.
+ * I.e. data gets inserted in the graphs of all collaborators.
+*/
+app.post('/collaboration-activities/:id/share', async (req, res, next) => {
+  try {
+    const collaborationId = req.params.id;
+    console.info(`Received request to initialize data distribution for collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
+
+    if (!collaboration) {
+      return res.sendStatus(404);
+    }
+
+    const organization = await getOrganizationFromHeaders(req.headers);
+    if (!organization) {
+      console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
+      return res.sendStatus(401);
+    }
+
+    const creator = await getPressReleaseCreator(collaboration.pressReleaseUri);
+    if (creator.uri !== organization.uri) {
+      console.info(`Current logged in user does not belong to the organization that created the press-release. User does not have the permission to start the co-editing process.`);
+      return res.sendStatus(403);
+    }
+
+    const collaborators = await getCollaborators(collaboration.uri);
+    await distributeData(collaboration, collaborators);
+
+    return res.sendStatus(204);
+  } catch (err) {
+    return handleGenericError(err, next);
+  }
+});
+
+/**
+ * Endpoint to update the shared press-release across all collaborators.
  * I.e. data gets distributed to the graphs of the collaborators
  * by first removing old and next inserting the updated data.
  *
@@ -41,7 +77,7 @@ new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
 app.put('/collaboration-activities/:id', async (req, res, next) => {
   try {
     const collaborationId = req.params.id;
-    console.info(`Received request to distribute data for collaboration-activity ${collaborationId}`);
+    console.info(`Received request to update data distribution for collaboration-activity ${collaborationId}`);
     const collaboration = await getCollaborationActivityById(collaborationId);
 
     if (!collaboration) {
@@ -62,9 +98,9 @@ app.put('/collaboration-activities/:id', async (req, res, next) => {
     }
 
     const user = await getUserFromHeaders(req.headers);
-    await distributeData(collaboration, collaborators, user);
+    await updateDataDistribution(collaboration, collaborators, user);
 
-    return res.sendStatus(200);
+    return res.sendStatus(204);
   } catch (err) {
     return handleGenericError(err, next);
   }
@@ -100,50 +136,9 @@ app.delete('/collaboration-activities/:id', async (req, res, next) => {
     const collaborators = await getCollaborators(collaboration.uri);
     await stopDataDistribution(collaboration, collaborators, creator);
 
-    return res.sendStatus(200);
+    return res.sendStatus(204);
   } catch (err) {
     return handleGenericError(err, next);
-  }
-});
-
-app.post('/collaboration-activities/:id/share', async (req, res, next) => {
-  try {
-    // get the collaboration activity by the requested id, if it is not found, return status 404 (Not found)
-    const collaborationActivityId = req.params.id;
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
-      return res.sendStatus(404);
-    }
-
-    // retrieve the press-release creator
-    const pressReleaseCreator = await getPressReleaseCreator(collaborationActivity.pressReleaseUri);
-
-    // Check if user has the right to share the press release,
-    // by checking if the press-release creator URI is the same as the organization URI in the request headers.
-    // if this is not the case, send a 403 (Forbidden) response
-    const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-    if (!requestedByOrganization?.uri || (pressReleaseCreator.uri !== requestedByOrganization.uri)) {
-      return res.sendStatus(403);
-    }
-
-    const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
-    console.info(`Creating copy of press-release ${collaborationActivity.pressReleaseUri} to temporary graph ${tempGraph}`);
-    await copyPressReleaseToGraph(collaborationActivity.pressReleaseUri, tempGraph);
-
-    const collaborators = await getCollaborators(collaborationActivity.uri);
-    for (const collaborator of collaborators) {
-      const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
-      console.info(`Copying data from temporary graph to collaborator graph ( ${target} )`);
-      await moveGraph(tempGraph, target);
-    }
-
-    console.info(`Removing temporary graph ( ${tempGraph} )`);
-    await removeGraph(tempGraph);
-
-    res.sendStatus(204);
-  } catch (err) {
-    console.error(err);
-    next(err);
   }
 });
 

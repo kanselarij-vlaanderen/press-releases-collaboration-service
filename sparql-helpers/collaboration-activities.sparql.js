@@ -39,7 +39,23 @@ export async function getCollaborators(collaborationActivityUri) {
   return queryResult.results.bindings.map(parseSparqlResult);
 }
 
-export async function distributeData(collaboration, collaborators, user) {
+export async function distributeData(collaboration, collaborators) {
+  const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${uuid()}`;
+  console.info(`Creating copy of press-release <${collaboration.pressReleaseUri}> to temporary graph ${tempGraph}`);
+  await copyPressReleaseToGraph(collaboration.pressReleaseUri, tempGraph);
+
+  for (const collaborator of collaborators) {
+    const targetGraph = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
+    console.info(`Copying data from temporary graph to target collaborator graph <${targetGraph}>`);
+    await moveGraph(tempGraph, targetGraph);
+  }
+
+  console.info(`Cleanup temporary graph <${tempGraph}>`);
+  await removeGraph(tempGraph);
+  console.info(`Successfully transferred press-release <${collaboration.pressReleaseUri}> to the ${collaborators.length} collaborators of collaboration <${collaboration.uri}>.`);
+}
+
+export async function updateDataDistribution(collaboration, collaborators, user) {
   let tokenClaimed = false;
   if (collaboration.tokenClaimUri) {
     tokenClaimed = await isTokenClaimAssignedToUser(collaboration.tokenClaimUri, user.uri);
