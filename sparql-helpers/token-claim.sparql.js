@@ -47,13 +47,13 @@ export async function deleteTokenClaims(tokenClaimURI, collaborationActivityURI,
 }
 
 export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
-  const q = (await query(`
-  ${PREFIXES}
-  ASK {
-    ${sparqlEscapeUri(tokenClaimUri)}       a                       ext:TokenClaim;
-                                            prov:wasAttributedTo    ${sparqlEscapeUri(userUri)}.
-  }
-  `));
+  const q = await query(`
+    ${PREFIXES}
+    ASK {
+      ${sparqlEscapeUri(tokenClaimUri)} a ext:TokenClaim ;
+          prov:wasAttributedTo ${sparqlEscapeUri(userUri)} .
+    }
+  `);
   return q.boolean;
 }
 

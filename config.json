@@ -2,7 +2,7 @@
   "resources": [
     {
       "type": "fabio:PressRelease",
-      "isMetadata": false,
+      "claimable": true,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -22,7 +22,7 @@
     },
     {
       "type": "nfo:FileDataObject",
-      "isMetadata": false,
+      "claimable": true,
       "path": "nie:hasPart / ^nie:dataSource*",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
@@ -38,7 +38,7 @@
     {
       "type": "ebucore:Contact",
       "path": "dct:source",
-      "isMetadata": false,
+      "claimable": true,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -59,7 +59,7 @@
     {
       "type": "vcard:Email",
       "path": "dct:source / vcard:hasEmail",
-      "isMetadata": false,
+      "claimable": true,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -70,7 +70,7 @@
     {
       "type": "vcard:Voice",
       "path": "dct:source / vcard:hasTelephone",
-      "isMetadata": false,
+      "claimable": true,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -81,7 +81,7 @@
     {
       "type": "vcard:Cell",
       "path": "dct:source / ext:hasMobile",
-      "isMetadata": false,
+      "claimable": true,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -90,22 +90,8 @@
       ]
     },
     {
-      "type": "ext:PressReleaseActivity",
-      "isMetadata": true,
-      "path": "^ext:used",
-      "properties": [
-        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-        "http://mu.semte.ch/vocabularies/core/uuid",
-        "http://www.w3.org/ns/prov#startedAtTime",
-        "http://purl.org/dc/terms/type",
-        "http://mu.semte.ch/vocabularies/ext/used",
-        "http://www.w3.org/ns/prov#wasAssociatedWith",
-        "http://purl.org/dc/terms/creator"
-      ]
-    },
-    {
       "type": "ext:CollaborationActivity",
-      "isMetadata": false,
+      "claimable": true,
       "path": "^prov:used",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
@@ -117,9 +103,20 @@
       ]
     },
     {
+      "type": "ext:TokenClaim",
+      "claimable": true,
+      "path": "^prov:used / ^prov:generated",
+      "properties": [
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "http://mu.semte.ch/vocabularies/core/uuid",
+        "http://purl.org/dc/terms/created",
+        "http://www.w3.org/ns/prov#wasAttributedTo"
+      ]
+    },
+    {
       "type": "ext:ApprovalActivity",
       "path": "^prov:used / ^prov:wasInfomedBy",
-      "isMetadata": true,
+      "claimable": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
@@ -129,14 +126,17 @@
       ]
     },
     {
-      "type": "ext:TokenClaim",
-      "isMetadata": false,
-      "path": "^prov:used / ^prov:generated",
+      "type": "ext:PressReleaseActivity",
+      "claimable": false,
+      "path": "^ext:used",
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         "http://mu.semte.ch/vocabularies/core/uuid",
-        "http://purl.org/dc/terms/created",
-        "http://www.w3.org/ns/prov#wasAttributedTo"
+        "http://www.w3.org/ns/prov#startedAtTime",
+        "http://purl.org/dc/terms/type",
+        "http://mu.semte.ch/vocabularies/ext/used",
+        "http://www.w3.org/ns/prov#wasAssociatedWith",
+        "http://purl.org/dc/terms/creator"
       ]
     }
   ]

@@ -3,9 +3,10 @@ import {
   deleteCollaborationActivityFromGraph,
   getCollaborationActivityById,
   getCollaborators,
+  distributeData
 } from './sparql-helpers/collaboration-activities.sparql';
 import {
-  copyPressReleaseToTemporaryGraph,
+  copyPressReleaseToGraph,
   deletePressReleaseFromGraph,
   getPressReleaseCreator,
 } from './sparql-helpers/press-release.sparql';
@@ -27,38 +28,43 @@ import {
 import { CronJob } from 'cron';
 new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
 
+/**
+ * Endpoint to initiate/update the shared press-release across all collaborators.
+ * I.e. data gets distributed to the graphs of the collaborators
+ * by first removing old and next inserting the updated data.
+ *
+ * Depending on the user that sends the request, the data in scope differs:
+ * - if the user currently claims the edit token, all data gets distributed
+ * - if the user doesn't hold the edit token atm only the approval-activities and
+ *   historic press-release-activities get distributed. Use case: user is currently
+ *   not editing the press-release, but might for example submit an approval that
+ *   needs to be distributed to the other collaborators.
+*/
 app.put('/collaboration-activities/:id', async (req, res, next) => {
   try {
-    const collaborationActivityId = req.params.id;
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
+    const collaborationId = req.params.id;
+    console.info(`Received request to distribute data for collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
+
+    if (!collaboration) {
       return res.sendStatus(404);
     }
 
-    const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-    const collaborators = await getCollaborators(collaborationActivity.uri);
-    if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
+    const organization = await getOrganizationFromHeaders(req.headers);
+    if (!organization) {
+      console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
       return res.sendStatus(403);
     }
 
-    const claimingUser = await getUserFromHeaders(req.headers);
-    const tokenClaimed = !collaborationActivity.tokenClaimUri ? false : await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
-
-    const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
-    console.info(`Creating copy of press-release ${tokenClaimed ? '' : 'metadata'} ${collaborationActivity.pressReleaseUri} to temporary graph ${tempGraph}`);
-    await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseUri, tempGraph, !tokenClaimed);
-
-    for (const collaborator of collaborators) {
-      const target = `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`;
-      console.info(`Deleting old data from collaborator graph ( ${target} )`);
-      await deletePressReleaseFromGraph(collaborationActivity.pressReleaseUri, target, !tokenClaimed);
-      console.info(`Copying data from temporary graph to collaborator graph ( ${target} )`);
-      await moveGraph(tempGraph, target);
+    const collaborators = await getCollaborators(collaboration.uri);
+    const isCollaborator = collaborators.find(collaborator => collaborator.uri === organization.uri);
+    if (!isCollaborator) {
+      console.info(`Current logged in user belongs to organization <${organization.uri}> which is not a collaborator of the shared press-release <${collaboration.pressReleaseUri}>`);
+      return res.sendStatus(403);
     }
 
-    console.info(`Removing temporary graph ( ${tempGraph} )`);
-    await removeGraph(tempGraph);
-    console.info(`successfully transferred press-release ${collaborationActivity.pressReleaseUri} to ${collaborators.length} collaborator graphs`);
+    const user = await getUserFromHeaders(req.headers);
+    await distributeData(collaboration, collaborators, user);
 
     return res.sendStatus(200);
   } catch (err) {
@@ -122,7 +128,7 @@ app.post('/collaboration-activities/:id/share', async (req, res, next) => {
 
     const tempGraph = `http://mu.semte.ch/graphs/tmp-data-share/${generateUuid()}`;
     console.info(`Creating copy of press-release ${collaborationActivity.pressReleaseUri} to temporary graph ${tempGraph}`);
-    await copyPressReleaseToTemporaryGraph(collaborationActivity.pressReleaseUri, tempGraph);
+    await copyPressReleaseToGraph(collaborationActivity.pressReleaseUri, tempGraph);
 
     const collaborators = await getCollaborators(collaborationActivity.uri);
     for (const collaborator of collaborators) {

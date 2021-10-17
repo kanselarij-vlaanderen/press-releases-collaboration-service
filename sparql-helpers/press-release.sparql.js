@@ -1,61 +1,93 @@
 import { sparqlEscapeUri, query } from 'mu';
 import { querySudo, updateSudo } from '@lblod/mu-auth-sudo';
-import {
-  parseSparqlResult,
-  toInsertQuery,
-  toStatements,
-  isInverse,
-  normalizePredicate, toDeleteQuery,
-} from '../helpers/generic-helpers';
+import { parseSparqlResult, toStatements, isInverse, normalizePredicate } from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
 import RESOURCE_CONFIG from '../config.json';
 
-export async function getPressReleaseCreator(pressReleaseURI) {
+export async function getPressReleaseCreator(pressReleaseUri) {
   const queryResult = await query(`
     ${PREFIXES}
-
     SELECT ?uri ?id
     WHERE {
-        ${sparqlEscapeUri(pressReleaseURI)}     a                   fabio:PressRelease;
-                                                dct:creator         ?uri.
-        ?uri                                    mu:uuid             ?id.
+        ${sparqlEscapeUri(pressReleaseUri)} a fabio:PressRelease ;
+            dct:creator ?uri .
+        ?uri mu:uuid ?id .
     }
-    `);
+  `);
   return parseSparqlResult(queryResult.results.bindings);
 }
 
-export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGraphURI, metaOnly) {
+/**
+ * Collect all data for the given press-release to the given graph. The data that needs
+ * to be collected is described in a resource configuration.
+ *
+ * Depending whether the user currently holds the edit token of the press-release all data
+ * or only approvals- and historic-activities are collected in the graph
+*/
+export async function copyPressReleaseToGraph(pressReleaseUri, graph, isClaimedByUser) {
   let resources = RESOURCE_CONFIG.resources;
-  if (metaOnly) {
-    resources = resources.filter(resource => resource.isMetadata);
+  // explicitely check on 'false' because value of isClaimedByUser may also be undefined
+  // in which case all resources needs to be copied
+  if (isClaimedByUser === false) {
+    // if press-release is not claimed by the current user, the 'core' content of the press-release
+    // will not be copied, since it cannot be changed.
+    resources = resources.filter(resource => !resource.isClaimable);
   }
 
   for (const resourceConfig of resources) {
-    const properties = await getProperties(pressReleaseURI, resourceConfig);
+    const properties = await getProperties(pressReleaseUri, resourceConfig);
     if (properties.length) {
       const statements = toStatements(properties);
-      const insertQuery = toInsertQuery(statements, tempGraphURI);
-      await updateSudo(insertQuery);
+      await updateSudo(`
+        ${PREFIXES}
+        INSERT DATA {
+            GRAPH ${sparqlEscapeUri(graph)}{
+                ${statements}
+            }
+        }
+      `);
     }
   }
 }
 
-export async function deletePressReleaseFromGraph(pressReleaseURI, graphURI, metaOnly) {
+/**
+ * Delete all data for the given press-release from the given graph. The data that needs
+ * to be deleted is described in a resource configuration.
+ *
+ * Depending whether the user currently holds the edit token of the press-release all data
+ * or only approvals- and historic-activities are deleted from the graph
+*/
+export async function deletePressReleaseFromGraph(pressReleaseUri, graph, isClaimedByUser) {
   let resources = RESOURCE_CONFIG.resources;
-  if (metaOnly) {
-    resources = resources.filter(resource => resource.isMetadata);
+  if (!isClaimedByUser) {
+    // if press-release is not claimed by the current user, the core content of the press-release
+    // will not be removed, since it cannot be changed.
+    resources = resources.filter(resource => !resource.isClaimable);
   }
+
   for (const resourceConfig of resources) {
-    const properties = await getProperties(pressReleaseURI, resourceConfig, graphURI);
+    const properties = await getProperties(pressReleaseUri, resourceConfig, graph);
     if (properties.length) {
       const statements = toStatements(properties);
-      const insertQuery = toDeleteQuery(statements, graphURI);
-      await updateSudo(insertQuery);
+      await updateSudo(`
+        ${PREFIXES}
+        DELETE DATA {
+            GRAPH ${sparqlEscapeUri(graph)}{
+                ${statements}
+            }
+        }`);
     }
   }
 }
 
-async function getProperties(pressReleaseURI, resourceConfig, graph) {
+/**
+ * Get all properties of a resource related to the given press-release.
+ * The resourceConfig contains all properties (direct and reverse) that need to be retrieved.
+ *
+ * Note: depending whether a graph is passed as 3rd argument the queries to retrieve the properties
+ * are executed on behalf of the user or using a sudo-query.
+*/
+async function getProperties(pressReleaseUri, resourceConfig, graph) {
   let properties = [];
 
   // Direct properties
@@ -63,9 +95,9 @@ async function getProperties(pressReleaseURI, resourceConfig, graph) {
   if (directProperties.length) {
     let pathToPressRelease;
     if (resourceConfig.path) {
-      pathToPressRelease = `${sparqlEscapeUri(pressReleaseURI)} ${resourceConfig.path}   ?subject .`;
+      pathToPressRelease = `${sparqlEscapeUri(pressReleaseUri)} ${resourceConfig.path}   ?subject .`;
     } else {
-      pathToPressRelease = `BIND(${sparqlEscapeUri(pressReleaseURI)} as ?subject)`;
+      pathToPressRelease = `BIND(${sparqlEscapeUri(pressReleaseUri)} as ?subject)`;
     }
     const values = directProperties.map((i) => sparqlEscapeUri(i)).join('\n');
 
@@ -75,7 +107,7 @@ async function getProperties(pressReleaseURI, resourceConfig, graph) {
             SELECT ?subject ?predicate ?object
             WHERE {
                 ${graph ? `GRAPH ${sparqlEscapeUri(graph)} {` : ''}
-                    ${sparqlEscapeUri(pressReleaseURI)} a fabio:PressRelease.
+                    ${sparqlEscapeUri(pressReleaseUri)} a fabio:PressRelease.
                     ${pathToPressRelease}
                     ?subject ?predicate ?object .
                     VALUES ?predicate {
@@ -91,9 +123,9 @@ async function getProperties(pressReleaseURI, resourceConfig, graph) {
   if (inverseProperties.length) {
     let pathToPressRelease;
     if (resourceConfig.path) {
-      pathToPressRelease = `${sparqlEscapeUri(pressReleaseURI)} ${resourceConfig.path}   ?object .`;
+      pathToPressRelease = `${sparqlEscapeUri(pressReleaseUri)} ${resourceConfig.path}   ?object .`;
     } else {
-      pathToPressRelease = `BIND(${sparqlEscapeUri(pressReleaseURI)} as ?object)`;
+      pathToPressRelease = `BIND(${sparqlEscapeUri(pressReleaseUri)} as ?object)`;
     }
     const values = inverseProperties.map((i) => {
       const predicate = normalizePredicate(i);
@@ -106,7 +138,7 @@ async function getProperties(pressReleaseURI, resourceConfig, graph) {
             SELECT ?subject ?predicate ?object
             WHERE {
                 ${graph ? `GRAPH ${sparqlEscapeUri(graph)} {` : ''}
-                    ${sparqlEscapeUri(pressReleaseURI)} a fabio:PressRelease.
+                    ${sparqlEscapeUri(pressReleaseUri)} a fabio:PressRelease.
                     ${pathToPressRelease}
                     ?subject ?predicate ?object .
                     VALUES ?predicate {
