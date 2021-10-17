@@ -17,12 +17,10 @@ export async function getApprovalActivity(collaborationUri, collaboratorUri) {
   return parseSparqlResult(queryResult.results.bindings[0]);
 }
 
-// TODO: it might be better to insert in all graphs where the collaboration-activity is stored?
-export async function createApprovalActivity(collaborationUri, collaboratorUri, collaborators) {
+export async function createApprovalActivity(collaborationUri, collaboratorUri) {
   const now = new Date();
   const id = generateUuid();
   const approvalActivity = `http://themis.vlaanderen.be/id/goedkeuringsactiviteit/${id}`;
-  const graphs = collaborators.map(collaborator => `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`);
 
   await updateSudo(`
     ${PREFIXES}
@@ -30,13 +28,13 @@ export async function createApprovalActivity(collaborationUri, collaboratorUri, 
         GRAPH ?graph {
             ${sparqlEscapeUri(approvalActivity)} a ext:ApprovalActivity ;
                 mu:uuid ${sparqlEscapeString(id)} ;
-                prov:wasAssociatedWith ${sparqlEscapeUri(collaboratorUri)};
-                prov:wasInformedBy ${sparqlEscapeUri(collaborationUri)};
-                prov:startedAtTime ${sparqlEscapeDateTime(now)}.
+                prov:wasAssociatedWith ${sparqlEscapeUri(collaboratorUri)} ;
+                prov:wasInformedBy ${sparqlEscapeUri(collaborationUri)} ;
+                prov:startedAtTime ${sparqlEscapeDateTime(now)} .
         }
     } WHERE {
-        VALUES ?graph {
-            ${graphs.map(g => sparqlEscapeUri(g)).join('\n')}
+        GRAPH ?graph {
+            ${sparqlEscapeUri(collaborationUri)} a ext:CollaborationActivity .
         }
     }`);
 }
@@ -49,7 +47,7 @@ export async function deleteApprovalActivity(collaborationUri) {
           GRAPH ?graph {
               ?s a ext:ApprovalActivity ;
                   prov:wasInformedBy ${sparqlEscapeUri(collaborationUri)} ;
-                  ?p ?o.
+                  ?p ?o .
            }
       }`);
 }

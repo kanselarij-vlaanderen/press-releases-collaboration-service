@@ -233,7 +233,7 @@ app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
       return res.sendStatus(409);
     }
 
-    await createApprovalActivity(collaboration.uri, organization.uri, collaborators);
+    await createApprovalActivity(collaboration.uri, organization.uri);
     return res.sendStatus(201);
   } catch (err) {
     return handleGenericError(err, next);
