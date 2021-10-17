@@ -3,7 +3,7 @@ import { updateSudo } from '@lblod/mu-auth-sudo';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 
 export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityUri) {
-    return (await query(`
+  return (await query(`
     ${PREFIXES}
     ASK WHERE {
         ?x      a                           ext:ApprovalActivity;
@@ -14,16 +14,16 @@ export async function approvalActivityByCollaboratorExists(collaboratorUri, coll
 }
 
 export async function createApprovalActivity(collaborationActivityUri, collaboratorUri, collaborators) {
-    const now = sparqlEscapeDateTime(new Date());
-    const id = generateUuid();
-    const subject = sparqlEscapeUri(`http://themis.vlaanderen.be/id/goedkeuringsactiviteit/${id}`);
+  const now = sparqlEscapeDateTime(new Date());
+  const id = generateUuid();
+  const subject = sparqlEscapeUri(`http://themis.vlaanderen.be/id/goedkeuringsactiviteit/${id}`);
 
-    for (const collaborator of collaborators) {
-        const graph = sparqlEscapeUri(`${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`);
+  for (const collaborator of collaborators) {
+    const graph = sparqlEscapeUri(`${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`);
 
-        console.info(`Creating ${subject} in ${graph}`);
+    console.info(`Creating ${subject} in ${graph}`);
 
-        await updateSudo(`
+    await updateSudo(`
             ${PREFIXES}
             INSERT DATA {
                GRAPH ${graph}{
@@ -35,12 +35,12 @@ export async function createApprovalActivity(collaborationActivityUri, collabora
                }
             }
         `);
-    }
+  }
 
 }
 
 export async function getApprovalsByCollaboration(collaborationUri) {
-    return (await query(`
+  return (await query(`
     ${PREFIXES}
     SELECT ?uri WHERE {
        ?uri     prov:wasInformedBy      ${sparqlEscapeUri(collaborationUri)}.
@@ -49,7 +49,7 @@ export async function getApprovalsByCollaboration(collaborationUri) {
 }
 
 export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
-    await updateSudo(`
+  await updateSudo(`
             ${PREFIXES}
             DELETE {
                GRAPH ?graph{
@@ -69,7 +69,7 @@ export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
 }
 
 export async function deleteApprovalActivitiesFromGraph(uri, graph) {
-    await updateSudo(`
+  await updateSudo(`
             ${PREFIXES}
             DELETE {
                GRAPH ${sparqlEscapeUri(graph)}{

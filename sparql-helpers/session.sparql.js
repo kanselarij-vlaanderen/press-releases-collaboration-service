@@ -3,8 +3,8 @@ import { mapBindingValue } from '../helpers/generic-helpers';
 import { query, sparqlEscapeUri } from 'mu';
 
 export async function getOrganizationFromHeaders(headers) {
-    const sessionURI = headers['mu-session-id'];
-    const queryResult = await query(`
+  const sessionURI = headers['mu-session-id'];
+  const queryResult = await query(`
     ${PREFIXES}
     SELECT ?uri ?id
     WHERE {
@@ -13,12 +13,12 @@ export async function getOrganizationFromHeaders(headers) {
     } LIMIT 1
     `);
 
-    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
 export async function getUserFromHeaders(headers) {
-    const sessionURI = headers['mu-session-id'];
-    const queryResult = await query(`
+  const sessionURI = headers['mu-session-id'];
+  const queryResult = await query(`
     ${PREFIXES}
     SELECT ?uri
     WHERE {
@@ -26,5 +26,5 @@ export async function getUserFromHeaders(headers) {
     } LIMIT 1
     `);
 
-    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }

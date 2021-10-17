@@ -5,7 +5,7 @@ export const SELECT_BATCH_SIZE = parseInt(process.env.SELECT_BATCH_SIZE) || 1000
 export const COLLABORATOR_GRAPH_PREFIX = process.env.COLLABORATOR_GRAPH_PREFIX || 'http://mu.semte.ch/graphs/organizations/';
 export const CRON_FREQUENCY_PATTERN = process.env.CRON_FREQUENCY_PATTERN || '*/5 * * * *';
 export const EDIT_TOKEN_MAX_AGE = parseInt(process.env.EDIT_TOKEN_MAX_AGE) || 1;
-export const EDIT_TOKEN_MAX_AGE_UNIT =process.env.EDIT_TOKEN_MAX_AGE_UNIT || 'minutes';
+export const EDIT_TOKEN_MAX_AGE_UNIT = process.env.EDIT_TOKEN_MAX_AGE_UNIT || 'minutes';
 
 
 export const PREFIXES = `
@@ -26,7 +26,3 @@ export const PREFIXES = `
     PREFIX adms: ${sparqlEscapeUri('http://www.w3.org/ns/adms#')}
     PREFIX org: ${sparqlEscapeUri('http://www.w3.org/ns/org#')}
 `;
-
-
-
-

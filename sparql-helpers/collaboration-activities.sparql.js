@@ -4,9 +4,9 @@ import { PREFIXES } from '../constants';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 
 export async function getCollaborationActivityById(id) {
-    const queryResult = await query(`
+  const queryResult = await query(`
     ${PREFIXES}
-    
+
     SELECT ?uri ?pressReleaseUri ?tokenClaimUri
     WHERE {
         ?uri                        a                   ext:CollaborationActivity;
@@ -16,13 +16,13 @@ export async function getCollaborationActivityById(id) {
     }
     LIMIT 1
     `);
-    return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
 }
 
 export async function getCollaborators(collaborationActivityURI) {
-    const queryResult = await query(`
+  const queryResult = await query(`
     ${PREFIXES}
-    
+
     SELECT ?uri ?id
     WHERE {
         ${sparqlEscapeUri(collaborationActivityURI)}    a                           ext:CollaborationActivity;
@@ -31,13 +31,13 @@ export async function getCollaborators(collaborationActivityURI) {
                                                         mu:uuid                     ?id.
     }
     `);
-    return queryResult.results.bindings.map(mapBindingValue);
+  return queryResult.results.bindings.map(mapBindingValue);
 }
 
 export async function deleteCollaborationActivityFromGraph(uri, graph) {
-    return await updateSudo(`
+  return await updateSudo(`
     ${PREFIXES}
-    
+
     DELETE {
        GRAPH ${sparqlEscapeUri(graph)}{
             ${sparqlEscapeUri(uri)}    a                           ext:CollaborationActivity;

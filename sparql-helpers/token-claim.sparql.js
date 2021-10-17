@@ -5,10 +5,10 @@ import moment from 'moment';
 
 export async function createTokenClaims(userURI, collaborationActivityURI) {
   const id = generateUuid();
-    const uri = 'http://themis.vlaanderen.be/id/tokenclaim/' + id;
-    const createdDate = new Date();
+  const uri = 'http://themis.vlaanderen.be/id/tokenclaim/' + id;
+  const createdDate = new Date();
 
-    return await updateSudo(`
+  return await updateSudo(`
     ${PREFIXES}
     INSERT {
         GRAPH ?graph {
@@ -47,14 +47,14 @@ export async function deleteTokenClaims(tokenClaimURI, collaborationActivityURI,
 }
 
 export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
-    const q = (await query(`
+  const q = (await query(`
   ${PREFIXES}
   ASK {
     ${sparqlEscapeUri(tokenClaimUri)}       a                       ext:TokenClaim;
                                             prov:wasAttributedTo    ${sparqlEscapeUri(userUri)}.
   }
   `));
-    return q.boolean;
+  return q.boolean;
 }
 
 export async function getTokenClaimAges() {
@@ -76,6 +76,6 @@ export async function getTokenClaimAges() {
       created: moment(tokenClaim.created.value),
       graph: tokenClaim.graph.value,
       collaborationActivityUri: tokenClaim.collaborationActivityUri.value
-    }
+    };
   });
 }
