@@ -172,28 +172,33 @@ app.post('/collaboration-activities/:id/claims', async (req, res, next) => {
   }
 });
 
+/**
+ * Endpoint to delete edit token claim for a shared press-release on behalf of a user.
+ * Note: the token claim is automatically removed from the graphs of all collaborators.
+*/
 app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
   try {
-    const collaborationActivityId = req.params.id;
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
-      // 404 if collaboration-activity with provided id does not exist
+    const collaborationId = req.params.id;
+    console.info(`Received request to delete token-claim for collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
+
+    if (!collaboration) {
       return res.sendStatus(404);
     }
 
-    if (!collaborationActivity.tokenClaimUri) {
-      // 409 if there is no token-claim linked to the collaboration-activity.
+    if (!collaboration.tokenClaimUri) {
+      console.info(`There is currently no token claimed for collaboration-activity <${collaboration.uri}>. Unable to unclaim.`);
       return res.sendStatus(409);
     }
 
-    const claimingUser = await getUserFromHeaders(req.headers);
-    const canDelete = await isTokenClaimAssignedToUser(collaborationActivity.tokenClaimUri, claimingUser.uri);
-    if (!canDelete) {
-      // 403 if tbe token-claim it is not assigned to the user that made the request.
-      // (use cases: claim has already been automatically released or assigned to another user)
+    const user = await getUserFromHeaders(req.headers);
+    const isClaimer = await isTokenClaimAssignedToUser(collaboration.tokenClaimUri, user.uri);
+    if (!isClaimer) {
+      console.info(`Current logged in user is not the user claiming edit token <${collaboration.tokenClaimUri}>. User does not have the permission to unclaim the token.`);
       return res.sendStatus(403);
     }
-    await deleteTokenClaims(collaborationActivity.tokenClaimUri, collaborationActivity.uri);
+
+    await deleteTokenClaims(collaboration.tokenClaimUri, collaboration.uri);
     return res.sendStatus(204);
   } catch (err) {
     return handleGenericError(err, next);
