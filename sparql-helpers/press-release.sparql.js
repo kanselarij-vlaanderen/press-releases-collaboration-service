@@ -71,10 +71,10 @@ export async function deletePressReleaseFromGraph(pressReleaseUri, graph, isClai
  * but not the press-release itself.
 */
 export async function deleteCollaborationResourcesFromGraph(pressReleaseUri, graph) {
-  const resources = RESOURCE_CONFIG.resources.filter(type => [
+  const resources = RESOURCE_CONFIG.resources.filter(resource => [
     'ext:CollaborationActivity',
     'ext:ApprovalActivity'
-  ].includes(type));
+  ].includes(resource.type));
   await deleteResources(pressReleaseUri, resources, graph);
 }
 
