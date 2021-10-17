@@ -12,9 +12,10 @@ export async function getPressReleaseCreator(pressReleaseUri) {
         ${sparqlEscapeUri(pressReleaseUri)} a fabio:PressRelease ;
             dct:creator ?uri .
         ?uri mu:uuid ?id .
-    }
+    } LIMIT 1
   `);
-  return parseSparqlResult(queryResult.results.bindings);
+
+  return parseSparqlResult(queryResult.results.bindings[0]);
 }
 
 /**

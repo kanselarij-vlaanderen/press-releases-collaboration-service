@@ -20,7 +20,7 @@ import {
 } from './sparql-helpers/token-claim.sparql';
 import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
 import {
-  approvalActivityByCollaboratorExists,
+  getApprovalActivity,
   createApprovalActivity,
   deleteApprovalActivityFromCollaboratorGraphs
 } from './sparql-helpers/approval-activity.sparql';
@@ -202,28 +202,41 @@ app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
   }
 });
 
+/**
+ * Endpoint to approve a shared press-release on behalf of an organization.
+ * Note: the approval is automatically inserted in the graphs of all collaborators.
+*/
 app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
   try {
-    const collaborationActivityId = req.params.id;
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
+    const collaborationId = req.params.id;
+    console.info(`Received request to initialize data distribution for collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
+
+    if (!collaboration) {
       return res.sendStatus(404);
     }
 
-    const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-    const collaborators = await getCollaborators(collaborationActivity.uri);
-    if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
+    const organization = await getOrganizationFromHeaders(req.headers);
+    if (!organization) {
+      console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
+      return res.sendStatus(401);
+    }
+
+    const collaborators = await getCollaborators(collaboration.uri);
+    const isCollaborator = collaborators.find(collaborator => collaborator.uri === organization.uri);
+    if (!isCollaborator) {
+      console.info(`Current logged in user belongs to organization <${organization.uri}> which is not a collaborator of the shared press-release <${collaboration.pressReleaseUri}>`);
       return res.sendStatus(403);
     }
 
-    const exists = await approvalActivityByCollaboratorExists(requestedByOrganization.uri, collaborationActivity.uri);
-    if (exists) {
+    const approval = await getApprovalActivity(collaboration.uri, organization.uri);
+    if (approval) {
+      console.info(`Organization of the current logged in user already approved the shared press-release <${collaboration.pressReleaseUri}>`);
       return res.sendStatus(409);
     }
 
-    await createApprovalActivity(collaborationActivity.uri, requestedByOrganization.uri, collaborators);
+    await createApprovalActivity(collaboration.uri, organization.uri, collaborators);
     return res.sendStatus(201);
-
   } catch (err) {
     return handleGenericError(err, next);
   }

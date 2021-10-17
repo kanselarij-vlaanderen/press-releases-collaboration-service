@@ -1,42 +1,43 @@
 import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid as generateUuid } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
+import { parseSparqlResult } from '../helpers/generic-helpers';
 
-export async function approvalActivityByCollaboratorExists(collaboratorUri, collaborationActivityUri) {
-  return (await query(`
+export async function getApprovalActivity(collaborationUri, collaboratorUri) {
+  const queryResult = await query(`
     ${PREFIXES}
-    ASK WHERE {
-        ?x      a                           ext:ApprovalActivity;
-                prov:wasInformedBy          ${sparqlEscapeUri(collaborationActivityUri)};
-                prov:wasAssociatedWith      ${sparqlEscapeUri(collaboratorUri)}.
-    }
-    `)).boolean;
+    SELECT ?uri ?id
+    WHERE {
+        ?uri a ext:ApprovalActivity ;
+            prov:wasInformedBy ${sparqlEscapeUri(collaborationUri)} ;
+            prov:wasAssociatedWith ${sparqlEscapeUri(collaboratorUri)} .
+    } LIMIT 1
+  `);
+
+  return parseSparqlResult(queryResult.results.bindings[0]);
 }
 
-export async function createApprovalActivity(collaborationActivityUri, collaboratorUri, collaborators) {
-  const now = sparqlEscapeDateTime(new Date());
+export async function createApprovalActivity(collaborationUri, collaboratorUri, collaborators) {
+  const now = new Date();
   const id = generateUuid();
-  const subject = sparqlEscapeUri(`http://themis.vlaanderen.be/id/goedkeuringsactiviteit/${id}`);
+  const approvalActivity = `http://themis.vlaanderen.be/id/goedkeuringsactiviteit/${id}`;
+  const graphs = collaborators.map(collaborator => `${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`);
 
-  for (const collaborator of collaborators) {
-    const graph = sparqlEscapeUri(`${COLLABORATOR_GRAPH_PREFIX}${collaborator.id}`);
-
-    console.info(`Creating ${subject} in ${graph}`);
-
-    await updateSudo(`
-            ${PREFIXES}
-            INSERT DATA {
-               GRAPH ${graph}{
-                  ${subject}        a                           ext:ApprovalActivity;
-                                    mu:uuid                     ${sparqlEscapeString(id)};
-                                    prov:wasAssociatedWith      ${sparqlEscapeUri(collaboratorUri)};
-                                    prov:wasInformedBy          ${sparqlEscapeUri(collaborationActivityUri)};
-                                    prov:startedAtTime          ${now}.
-               }
-            }
-        `);
-  }
-
+  await updateSudo(`
+    ${PREFIXES}
+    INSERT {
+        GRAPH ?graph {
+            ${sparqlEscapeUri(approvalActivity)} a ext:ApprovalActivity ;
+                mu:uuid ${sparqlEscapeString(id)} ;
+                prov:wasAssociatedWith ${sparqlEscapeUri(collaboratorUri)};
+                prov:wasInformedBy ${sparqlEscapeUri(collaborationUri)};
+                prov:startedAtTime ${sparqlEscapeDateTime(now)}.
+        }
+    } WHERE {
+        VALUES ?graph {
+            ${graphs.map(g => sparqlEscapeUri(g)).join('\n')}
+        }
+    }`);
 }
 
 export async function getApprovalsByCollaboration(collaborationUri) {
@@ -62,26 +63,6 @@ export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
                       ?s                a                           ext:ApprovalActivity;
                                         prov:wasInformedBy          ${sparqlEscapeUri(uri)};
                                         ?p                          ?o.
-
-                }
-            }
-        `);
-}
-
-export async function deleteApprovalActivitiesFromGraph(uri, graph) {
-  await updateSudo(`
-            ${PREFIXES}
-            DELETE {
-               GRAPH ${sparqlEscapeUri(graph)}{
-                     ?s             a                           ext:ApprovalActivity;
-                                    ?p                          ?o;
-                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
-               }
-            } WHERE {
-                GRAPH ${sparqlEscapeUri(graph)} {
-                       ?s            a                           ext:ApprovalActivity;
-                                     ?p                          ?o;
-                                     prov:wasInformedBy          ${sparqlEscapeUri(uri)}.
 
                 }
             }
