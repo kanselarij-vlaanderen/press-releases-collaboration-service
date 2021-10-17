@@ -1,4 +1,8 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
+import { cronJobHandler, handleGenericError } from './helpers/generic-helpers';
+import { getOrganizationFromHeaders, getUserFromHeaders } from './sparql-helpers/session.sparql';
+import { moveGraph, removeGraph } from './helpers/graph-helpers';
+import { getPressReleaseCreator } from './sparql-helpers/press-release.sparql';
 import {
   getCollaborationActivityById,
   getCollaborators,
@@ -7,24 +11,18 @@ import {
   stopDataDistribution
 } from './sparql-helpers/collaboration-activities.sparql';
 import {
-  copyPressReleaseToGraph,
-  getPressReleaseCreator,
-} from './sparql-helpers/press-release.sparql';
-import { cronJobHandler, handleGenericError } from './helpers/generic-helpers';
-import { getOrganizationFromHeaders, getUserFromHeaders } from './sparql-helpers/session.sparql';
-import { moveGraph, removeGraph } from './helpers/graph-helpers';
-import {
   createTokenClaims,
   deleteTokenClaims,
   isTokenClaimAssignedToUser,
 } from './sparql-helpers/token-claim.sparql';
-import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
 import {
   getApprovalActivity,
   createApprovalActivity,
-  deleteApprovalActivityFromCollaboratorGraphs
+  deleteApprovalActivity
 } from './sparql-helpers/approval-activity.sparql';
+import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
 import { CronJob } from 'cron';
+
 new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
 
 /**
@@ -209,7 +207,7 @@ app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
 app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
   try {
     const collaborationId = req.params.id;
-    console.info(`Received request to initialize data distribution for collaboration-activity ${collaborationId}`);
+    console.info(`Received request to approve collaboration-activity ${collaborationId}`);
     const collaboration = await getCollaborationActivityById(collaborationId);
 
     if (!collaboration) {
@@ -242,24 +240,35 @@ app.post('/collaboration-activities/:id/approvals', async (req, res, next) => {
   }
 });
 
+/**
+ * Endpoint to reset approvals of a shared press-release (e.g. after an update of the press-release)
+ * Note: the approvals are automatically deleted from the graphs of all collaborators.
+*/
 app.delete('/collaboration-activities/:id/approvals', async (req, res, next) => {
   try {
-    const collaborationActivityId = req.params.id;
+    const collaborationId = req.params.id;
+    console.info(`Received request to reset approvals for collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
 
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
-      return res.status(404).send('Collaboration activity not found');
+    if (!collaboration) {
+      return res.sendStatus(404);
     }
 
-    const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-    const collaborators = await getCollaborators(collaborationActivity.uri);
-    if (!requestedByOrganization || collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
+    const organization = await getOrganizationFromHeaders(req.headers);
+    if (!organization) {
+      console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
+      return res.sendStatus(401);
+    }
+
+    const collaborators = await getCollaborators(collaboration.uri);
+    const isCollaborator = collaborators.find(collaborator => collaborator.uri === organization.uri);
+    if (!isCollaborator) {
+      console.info(`Current logged in user belongs to organization <${organization.uri}> which is not a collaborator of the shared press-release <${collaboration.pressReleaseUri}>`);
       return res.sendStatus(403);
     }
 
-    await deleteApprovalActivityFromCollaboratorGraphs(collaborationActivity.uri);
+    await deleteApprovalActivity(collaboration.uri);
     return res.sendStatus(204);
-
   } catch (err) {
     return handleGenericError(err, next);
   }

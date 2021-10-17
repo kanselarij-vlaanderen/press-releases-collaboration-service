@@ -17,6 +17,7 @@ export async function getApprovalActivity(collaborationUri, collaboratorUri) {
   return parseSparqlResult(queryResult.results.bindings[0]);
 }
 
+// TODO: it might be better to insert in all graphs where the collaboration-activity is stored?
 export async function createApprovalActivity(collaborationUri, collaboratorUri, collaborators) {
   const now = new Date();
   const id = generateUuid();
@@ -40,31 +41,15 @@ export async function createApprovalActivity(collaborationUri, collaboratorUri, 
     }`);
 }
 
-export async function getApprovalsByCollaboration(collaborationUri) {
-  return (await query(`
-    ${PREFIXES}
-    SELECT ?uri WHERE {
-       ?uri     prov:wasInformedBy      ${sparqlEscapeUri(collaborationUri)}.
-    }
-    `)).results.bindings;
-}
-
-export async function deleteApprovalActivityFromCollaboratorGraphs(uri) {
+// TODO: it might be better to make use of the resource config to construct the delete query?
+export async function deleteApprovalActivity(collaborationUri) {
   await updateSudo(`
-            ${PREFIXES}
-            DELETE {
-               GRAPH ?graph{
-                     ?s             a                           ext:ApprovalActivity;
-                                    prov:wasInformedBy          ${sparqlEscapeUri(uri)};
-                                    ?p                          ?o.
-               }
-            } WHERE {
-                GRAPH ?graph {
-                      ?s                a                           ext:ApprovalActivity;
-                                        prov:wasInformedBy          ${sparqlEscapeUri(uri)};
-                                        ?p                          ?o.
-
-                }
-            }
-        `);
+      ${PREFIXES}
+      DELETE WHERE {
+          GRAPH ?graph {
+              ?s a ext:ApprovalActivity ;
+                  prov:wasInformedBy ${sparqlEscapeUri(collaborationUri)} ;
+                  ?p ?o.
+           }
+      }`);
 }
