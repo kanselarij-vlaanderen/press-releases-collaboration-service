@@ -1,7 +1,7 @@
 import { sparqlEscapeUri, query } from 'mu';
 import { querySudo, updateSudo } from '@lblod/mu-auth-sudo';
 import {
-  mapBindingValue,
+  parseSparqlResult,
   toInsertQuery,
   toStatements,
   isInverse,
@@ -21,7 +21,7 @@ export async function getPressReleaseCreator(pressReleaseURI) {
         ?uri                                    mu:uuid             ?id.
     }
     `);
-  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+  return parseSparqlResult(queryResult.results.bindings);
 }
 
 export async function copyPressReleaseToTemporaryGraph(pressReleaseURI, tempGraphURI, metaOnly) {

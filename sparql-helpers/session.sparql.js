@@ -1,5 +1,5 @@
 import { PREFIXES } from '../constants';
-import { mapBindingValue } from '../helpers/generic-helpers';
+import { parseSparqlResult } from '../helpers/generic-helpers';
 import { query, sparqlEscapeUri } from 'mu';
 
 export async function getOrganizationFromHeaders(headers) {
@@ -13,7 +13,7 @@ export async function getOrganizationFromHeaders(headers) {
     } LIMIT 1
     `);
 
-  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+  return parseSparqlResult(queryResult.results.bindings);
 }
 
 export async function getUserFromHeaders(headers) {
@@ -26,5 +26,5 @@ export async function getUserFromHeaders(headers) {
     } LIMIT 1
     `);
 
-  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+  return parseSparqlResult(queryResult.results.bindings);
 }

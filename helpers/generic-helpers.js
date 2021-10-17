@@ -8,12 +8,16 @@ export function handleGenericError(e, next) {
   return next(e);
 }
 
-export function mapBindingValue(binding) {
-  const result = {};
-  for (let key in binding) {
-    result[key] = binding[key].value;
+export function parseSparqlResult(binding) {
+  if (binding) {
+    const result = {};
+    for (let key in binding) {
+      result[key] = binding[key].value;
+    }
+    return result;
+  } else {
+    return null;
   }
-  return result;
 }
 
 export function isInverse(predicate) {

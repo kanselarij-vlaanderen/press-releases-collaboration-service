@@ -1,5 +1,5 @@
 import { sparqlEscapeString, sparqlEscapeUri, query } from 'mu';
-import { mapBindingValue } from '../helpers/generic-helpers';
+import { parseSparqlResult } from '../helpers/generic-helpers';
 import { PREFIXES } from '../constants';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 
@@ -9,14 +9,15 @@ export async function getCollaborationActivityById(id) {
 
     SELECT ?uri ?pressReleaseUri ?tokenClaimUri
     WHERE {
-        ?uri                        a                   ext:CollaborationActivity;
-                                    mu:uuid             ${sparqlEscapeString(id)};
-                                    prov:used           ?pressReleaseUri.
-        OPTIONAL { ?uri             prov:generated      ?tokenClaimUri }
+        ?uri a ext:CollaborationActivity;
+             mu:uuid ${sparqlEscapeString(id)};
+             prov:used ?pressReleaseUri.
+        OPTIONAL { ?uri prov:generated ?tokenClaimUri }
     }
     LIMIT 1
     `);
-  return queryResult.results.bindings.length ? queryResult.results.bindings.map(mapBindingValue)[0] : null;
+
+  return parseSparqlResult(queryResult.results.bindings[0]);
 }
 
 export async function getCollaborators(collaborationActivityURI) {
@@ -31,7 +32,7 @@ export async function getCollaborators(collaborationActivityURI) {
                                                         mu:uuid                     ?id.
     }
     `);
-  return queryResult.results.bindings.map(mapBindingValue);
+  return queryResult.results.bindings.map(parseSparqlResult);
 }
 
 export async function deleteCollaborationActivityFromGraph(uri, graph) {
