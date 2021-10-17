@@ -13,7 +13,7 @@ export async function getOrganizationFromHeaders(headers) {
     } LIMIT 1
     `);
 
-  return parseSparqlResult(queryResult.results.bindings);
+  return parseSparqlResult(queryResult.results.bindings[0]);
 }
 
 export async function getUserFromHeaders(headers) {
@@ -26,5 +26,5 @@ export async function getUserFromHeaders(headers) {
     } LIMIT 1
   `);
 
-  return parseSparqlResult(queryResult.results.bindings);
+  return parseSparqlResult(queryResult.results.bindings[0]);
 }
