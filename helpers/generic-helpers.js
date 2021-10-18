@@ -75,7 +75,7 @@ export async function cronJobHandler() {
 
   for (const tokenClaim of toDelete) {
     console.info(`Deleting ${tokenClaim.uri} from ${tokenClaim.graph} expired on ${tokenClaim.created}`);
-    await deleteTokenClaim(tokenClaim.uri, tokenClaim.collaborationActivityUri, tokenClaim.graph);
+    await deleteTokenClaim(tokenClaim.uri, tokenClaim.graph);
   }
 
   if (toDelete) {

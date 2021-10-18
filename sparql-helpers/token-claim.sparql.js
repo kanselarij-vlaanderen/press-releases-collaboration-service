@@ -25,20 +25,15 @@ export async function createTokenClaim(collaborationUri, userUri) {
     }`);
 }
 
-export async function deleteTokenClaim(tokenClaimUri, collaborationActivityUri, graph) {
+export async function deleteTokenClaim(tokenClaimUri, graph) {
   graph = graph ? sparqlEscapeUri(graph) : '?graph';
 
   await updateSudo(`
     ${PREFIXES}
-    DELETE {
+    DELETE WHERE {
       GRAPH ${graph} {
         ${sparqlEscapeUri(tokenClaimUri)} ?p ?o.
-        ${sparqlEscapeUri(collaborationActivityUri)} prov:generated ${sparqlEscapeUri(tokenClaimUri)}.
-      }
-    } WHERE {
-      GRAPH ${graph} {
-        ${sparqlEscapeUri(tokenClaimUri)} ?p ?o.
-        ${sparqlEscapeUri(collaborationActivityUri)} prov:generated ${sparqlEscapeUri(tokenClaimUri)}.
+        ?collaborationActivity prov:generated ${sparqlEscapeUri(tokenClaimUri)}.
       }
     }
   `);

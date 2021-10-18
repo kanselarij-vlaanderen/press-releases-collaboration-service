@@ -208,7 +208,7 @@ app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
       return res.sendStatus(403);
     }
 
-    await deleteTokenClaim(collaboration.tokenClaimUri, collaboration.uri);
+    await deleteTokenClaim(collaboration.tokenClaimUri);
     return res.sendStatus(204);
   } catch (err) {
     return handleGenericError(err, next);
