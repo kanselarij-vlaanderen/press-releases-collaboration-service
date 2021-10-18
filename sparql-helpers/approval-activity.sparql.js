@@ -1,4 +1,4 @@
-import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid as generateUuid } from 'mu';
+import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid } from 'mu';
 import { updateSudo } from '@lblod/mu-auth-sudo';
 import { COLLABORATOR_GRAPH_PREFIX, PREFIXES } from '../constants';
 import { parseSparqlResult } from '../helpers/generic-helpers';
@@ -19,7 +19,7 @@ export async function getApprovalActivity(collaborationUri, collaboratorUri) {
 
 export async function createApprovalActivity(collaborationUri, collaboratorUri) {
   const now = new Date();
-  const id = generateUuid();
+  const id = uuid();
   const approvalActivity = `http://themis.vlaanderen.be/id/goedkeuringsactiviteit/${id}`;
 
   await updateSudo(`

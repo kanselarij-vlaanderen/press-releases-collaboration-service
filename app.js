@@ -11,7 +11,7 @@ import {
   stopDataDistribution
 } from './sparql-helpers/collaboration-activities.sparql';
 import {
-  createTokenClaims,
+  createTokenClaim,
   deleteTokenClaims,
   isTokenClaimAssignedToUser,
 } from './sparql-helpers/token-claim.sparql';
@@ -140,33 +140,43 @@ app.delete('/collaboration-activities/:id', async (req, res, next) => {
   }
 });
 
+/**
+ * Endpoint to claim the edit token for a shared press-release on behalf of a user.
+ * The token can only be claimed by one user at a time.
+ * Note: the token claim is automatically inserted in the graphs of all collaborators.
+*/
 app.post('/collaboration-activities/:id/claims', async (req, res, next) => {
   try {
-    const collaborationActivityId = req.params.id;
-    const collaborationActivity = await getCollaborationActivityById(collaborationActivityId);
-    if (!collaborationActivity) {
-      // 404 if collaboration-activity with provided id does not exist
+    const collaborationId = req.params.id;
+    console.info(`Received request to claim token for collaboration-activity ${collaborationId}`);
+    const collaboration = await getCollaborationActivityById(collaborationId);
+
+    if (!collaboration) {
       return res.sendStatus(404);
     }
 
-    if (collaborationActivity.tokenClaimUri) {
-      // 409 if collaboration-activity already has a token-claim linked to it.
+    if (collaboration.tokenClaimUri) {
+      console.info(`Token for collaboration <${collaboration.uri}> is already claimed by someone. Unable to claim.`);
       return res.sendStatus(409);
     }
 
-    // check if request is made by a user that s part of an organization that participates in the collaboration-activity
-    const requestedByOrganization = await getOrganizationFromHeaders(req.headers);
-    const collaborators = await getCollaborators(collaborationActivity.uri);
-    if (collaborators.find(collaborator => collaborator.uri === requestedByOrganization.uri) == null) {
+    const organization = await getOrganizationFromHeaders(req.headers);
+    if (!organization) {
+      console.info(`Current logged in user does not belong to any organization. Unable to determine access to the shared press-release`);
+      return res.sendStatus(401);
+    }
+
+    const collaborators = await getCollaborators(collaboration.uri);
+    const isCollaborator = collaborators.find(collaborator => collaborator.uri === organization.uri);
+    if (!isCollaborator) {
+      console.info(`Current logged in user belongs to organization <${organization.uri}> which is not a collaborator of the shared press-release <${collaboration.pressReleaseUri}>`);
       return res.sendStatus(403);
     }
 
-    // Get user URI from headers to link to token-claim (prov:wasAttributedTo)
-    const claimingUser = await getUserFromHeaders(req.headers);
-    await createTokenClaims(claimingUser.uri, collaborationActivity.uri);
+    const user = await getUserFromHeaders(req.headers);
+    await createTokenClaim(collaboration.uri, user.uri);
 
-    res.sendStatus(201);
-
+    return res.sendStatus(201);
   } catch (err) {
     return handleGenericError(err, next);
   }
