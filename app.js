@@ -1,7 +1,9 @@
 import { app, errorHandler, uuid as generateUuid } from 'mu';
-import { cronJobHandler, handleGenericError } from './helpers/generic-helpers';
+import { CronJob } from 'cron';
+import { CRON_FREQUENCY_PATTERN } from './constants';
+import { tokenClaimExpirationCronJob } from './cron-job';
+import { handleGenericError } from './helpers/generic-helpers';
 import { getOrganizationFromHeaders, getUserFromHeaders } from './sparql-helpers/session.sparql';
-import { moveGraph, removeGraph } from './helpers/graph-helpers';
 import { getPressReleaseCreator } from './sparql-helpers/press-release.sparql';
 import {
   getCollaborationActivityById,
@@ -20,10 +22,8 @@ import {
   createApprovalActivity,
   deleteApprovalActivities
 } from './sparql-helpers/approval-activity.sparql';
-import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
-import { CronJob } from 'cron';
 
-new CronJob(CRON_FREQUENCY_PATTERN, cronJobHandler, null, true);
+new CronJob(CRON_FREQUENCY_PATTERN, tokenClaimExpirationCronJob, null, true);
 
 /**
  * Endpoint to start sharing a press-release.

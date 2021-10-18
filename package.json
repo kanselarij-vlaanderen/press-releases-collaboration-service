@@ -10,7 +10,6 @@
   "license": "MIT",
   "dependencies": {
     "@lblod/mu-auth-sudo": "^0.3.2",
-    "cron": "^1.8.2",
-    "moment": "^2.29.1"
+    "cron": "^1.8.2"
   }
 }

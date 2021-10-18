@@ -1,7 +1,37 @@
 import { sparqlEscapeUri, sparqlEscapeDateTime, sparqlEscapeString, query, uuid } from 'mu';
 import { querySudo, updateSudo } from '@lblod/mu-auth-sudo';
 import { PREFIXES } from '../constants';
-import moment from 'moment';
+import { parseSparqlResult } from '../helpers/generic-helpers';
+
+export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
+  const q = await query(`
+    ${PREFIXES}
+    ASK {
+      ${sparqlEscapeUri(tokenClaimUri)} a ext:TokenClaim ;
+          prov:wasAttributedTo ${sparqlEscapeUri(userUri)} .
+    }
+  `);
+  return q.boolean;
+}
+
+export async function getAllTokenClaims() {
+	const queryResult = await querySudo(`
+  	${PREFIXES}
+    SELECT DISTINCT ?uri ?lastActionDateTime
+    WHERE {
+      GRAPH ?graph {
+        ?uri a ext:TokenClaim ;
+            dct:created ?created .
+        ?collaboration prov:generated ?uri ;
+            prov:used ?pressRelease .
+        ?pressRelease dct:modified ?modified .
+        BIND(IF(?created > ?modified, ?created, ?modified) as ?lastActionDateTime)
+      }
+    }
+  `);
+
+  return queryResult.results.bindings.map(parseSparqlResult);
+}
 
 export async function createTokenClaim(collaborationUri, userUri) {
   const id = uuid();
@@ -25,50 +55,14 @@ export async function createTokenClaim(collaborationUri, userUri) {
     }`);
 }
 
-export async function deleteTokenClaim(tokenClaimUri, graph) {
-  graph = graph ? sparqlEscapeUri(graph) : '?graph';
-
+export async function deleteTokenClaim(tokenClaimUri) {
   await updateSudo(`
     ${PREFIXES}
     DELETE WHERE {
-      GRAPH ${graph} {
+      GRAPH ?graph {
         ${sparqlEscapeUri(tokenClaimUri)} ?p ?o.
         ?collaborationActivity prov:generated ${sparqlEscapeUri(tokenClaimUri)}.
       }
     }
   `);
-}
-
-export async function isTokenClaimAssignedToUser(tokenClaimUri, userUri) {
-  const q = await query(`
-    ${PREFIXES}
-    ASK {
-      ${sparqlEscapeUri(tokenClaimUri)} a ext:TokenClaim ;
-          prov:wasAttributedTo ${sparqlEscapeUri(userUri)} .
-    }
-  `);
-  return q.boolean;
-}
-
-export async function getTokenClaimAges() {
-	const q = await querySudo(`
-  	${PREFIXES}
-    SELECT ?uri ?created ?graph ?collaborationActivityUri
-    WHERE {
-      GRAPH ?graph {
-        ?uri a ext:TokenClaim;
-            dct:created ?created.
-        ?collaborationActivityUri prov:generated ?uri.
-      }
-    }
-  `);
-
-  return q.results.bindings.map((tokenClaim) => {
-    return {
-      uri: tokenClaim.uri.value,
-      created: moment(tokenClaim.created.value),
-      graph: tokenClaim.graph.value,
-      collaborationActivityUri: tokenClaim.collaborationActivityUri.value
-    };
-  });
 }
