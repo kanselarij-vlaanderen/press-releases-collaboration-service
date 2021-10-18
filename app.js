@@ -12,13 +12,13 @@ import {
 } from './sparql-helpers/collaboration-activities.sparql';
 import {
   createTokenClaim,
-  deleteTokenClaims,
+  deleteTokenClaim,
   isTokenClaimAssignedToUser,
 } from './sparql-helpers/token-claim.sparql';
 import {
   getApprovalActivity,
   createApprovalActivity,
-  deleteApprovalActivity
+  deleteApprovalActivities
 } from './sparql-helpers/approval-activity.sparql';
 import { COLLABORATOR_GRAPH_PREFIX, CRON_FREQUENCY_PATTERN } from './constants';
 import { CronJob } from 'cron';
@@ -204,11 +204,11 @@ app.delete('/collaboration-activities/:id/claims', async (req, res, next) => {
     const user = await getUserFromHeaders(req.headers);
     const isClaimer = await isTokenClaimAssignedToUser(collaboration.tokenClaimUri, user.uri);
     if (!isClaimer) {
-      console.info(`Current logged in user is not the user claiming edit token <${collaboration.tokenClaimUri}>. User does not have the permission to unclaim the token.`);
+      console.info(`Current logged in user is not the user claiming the edit token <${collaboration.tokenClaimUri}>. User does not have the permission to unclaim the token.`);
       return res.sendStatus(403);
     }
 
-    await deleteTokenClaims(collaboration.tokenClaimUri, collaboration.uri);
+    await deleteTokenClaim(collaboration.tokenClaimUri, collaboration.uri);
     return res.sendStatus(204);
   } catch (err) {
     return handleGenericError(err, next);
@@ -282,7 +282,7 @@ app.delete('/collaboration-activities/:id/approvals', async (req, res, next) => 
       return res.sendStatus(403);
     }
 
-    await deleteApprovalActivity(collaboration.uri);
+    await deleteApprovalActivities(collaboration.uri);
     return res.sendStatus(204);
   } catch (err) {
     return handleGenericError(err, next);

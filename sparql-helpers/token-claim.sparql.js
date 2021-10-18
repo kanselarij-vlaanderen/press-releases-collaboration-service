@@ -25,7 +25,7 @@ export async function createTokenClaim(collaborationUri, userUri) {
     }`);
 }
 
-export async function deleteTokenClaims(tokenClaimUri, collaborationActivityUri, graph) {
+export async function deleteTokenClaim(tokenClaimUri, collaborationActivityUri, graph) {
   graph = graph ? sparqlEscapeUri(graph) : '?graph';
 
   await updateSudo(`

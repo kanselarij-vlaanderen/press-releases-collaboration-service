@@ -40,7 +40,7 @@ export async function createApprovalActivity(collaborationUri, collaboratorUri) 
 }
 
 // TODO: it might be better to make use of the resource config to construct the delete query?
-export async function deleteApprovalActivity(collaborationUri) {
+export async function deleteApprovalActivities(collaborationUri) {
   await updateSudo(`
       ${PREFIXES}
       DELETE WHERE {

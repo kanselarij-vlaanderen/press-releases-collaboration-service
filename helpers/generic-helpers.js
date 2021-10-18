@@ -1,6 +1,6 @@
 import { sparqlEscapeUri, sparqlEscapeString } from 'mu';
 import { EDIT_TOKEN_MAX_AGE, EDIT_TOKEN_MAX_AGE_UNIT, PREFIXES } from '../constants';
-import { deleteTokenClaims, getTokenClaimAges } from '../sparql-helpers/token-claim.sparql';
+import { deleteTokenClaim, getTokenClaimAges } from '../sparql-helpers/token-claim.sparql';
 
 export function handleGenericError(e, next) {
   console.error(e);
@@ -75,7 +75,7 @@ export async function cronJobHandler() {
 
   for (const tokenClaim of toDelete) {
     console.info(`Deleting ${tokenClaim.uri} from ${tokenClaim.graph} expired on ${tokenClaim.created}`);
-    await deleteTokenClaims(tokenClaim.uri, tokenClaim.collaborationActivityUri, tokenClaim.graph);
+    await deleteTokenClaim(tokenClaim.uri, tokenClaim.collaborationActivityUri, tokenClaim.graph);
   }
 
   if (toDelete) {
