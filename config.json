@@ -115,7 +115,7 @@
     },
     {
       "type": "ext:ApprovalActivity",
-      "path": "^prov:used / ^prov:wasInfomedBy",
+      "path": "^prov:used / ^prov:wasInformedBy",
       "claimable": false,
       "properties": [
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",

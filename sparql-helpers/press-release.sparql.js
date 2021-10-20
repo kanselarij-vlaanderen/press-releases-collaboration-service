@@ -62,6 +62,13 @@ export async function deletePressReleaseFromGraph(pressReleaseUri, graph, isClai
     // if press-release is not claimed by the current user, the core content of the press-release
     // will not be removed, since it cannot be changed.
     resources = resources.filter(resource => !resource.isClaimable);
+
+    // sort the resources to delete the resource with the deepest path (containing '/') relative to the press-release first
+    resources = resources.sort((a, b) => {
+      const aLength = a.path ? (a.path.match(/\//g) || []).length : -1;
+      const bLength = b.path ? (b.path.match(/\//g) || []).length : -1;
+      return bLength - aLength;
+    });
   }
   await deleteResources(pressReleaseUri, resources, graph);
 }
