@@ -1,6 +1,6 @@
 {
   "name": "press-releases-collaboration-service",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Microservice managing collaborations between organizations on press releases",
   "main": "app.js",
   "scripts": {
